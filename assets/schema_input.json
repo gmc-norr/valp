@@ -1,0 +1,48 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/gmc-norr/valp/main/assets/schema_input.json",
+    "title": "Input",
+    "description": "An input for the validation pipepline.",
+
+    "type": "array",
+    "minItems": 1,
+    "items": {
+        "type": "object",
+        "properties": {
+            "truthset": {
+                "description": "Path to a VCF file for the truth set of variants",
+                "type": "string",
+                "format": "file-path"
+            },
+            "truthset_genome": {
+                "description": "Genome version of the truth set",
+                "type": "string",
+                "enum": ["GRCh37", "GRCh38"],
+                "default": "GRCh38"
+            },
+            "queryset": {
+                "description": "Path to a VCF file for the query set of variants",
+                "type": "string",
+                "format": "file-path"
+            },
+            "queryset_genome": {
+                "description": "Genome version of the query set",
+                "type": "string",
+                "enum": ["GRCh37", "GRCh38"],
+                "default": "GRCh38"
+            },
+            "conf_regions": {
+                "description": "Path to a BED file containing high-confidence regions in the reference genome of the query set that should be used for the comparison.",
+                "type": "string",
+                "format": "file-path"
+            },
+            "limit_regions": {
+                "description": "Path to a BED file containing regions that the analysis should be limited to. These could for example be when comparin WES or panel data with WGS data and you want to limit the comparison to captured regions of the genome. The genome version should match with the query set",
+                "type": "string",
+                "format": "file-path"
+            }
+        },
+        "required": ["truthset", "truthset_genome", "queryset", "queryset_genome"]
+    },
+    "errorMessage": "Expected at least one row in the input file"
+}

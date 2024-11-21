@@ -1,0 +1,121 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/gmc-norr/valp/main/nextflow_schema.json",
+    "title": "valp pipeline parameters",
+    "description": "",
+    "type": "object",
+    "$defs": {
+        "input_output_options": {
+            "title": "Input/output options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define where the pipeline should find input data and save output data.",
+            "required": [
+                "input",
+                "include_chr"
+            ],
+            "properties": {
+                "input": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "schema": "assets/schema_input.json",
+                    "mimetype": "text/csv",
+                    "pattern": "^\\S+\\.csv$",
+                    "description": "Path to comma-separated file containing information about the files included in the comparison.",
+                    "help_text": "You will need to create a file with information about the samples that should be included in the comparison before running the pipeline. Use this parameter to specify its location.",
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "include_chr": {
+                    "type": "array",
+                    "description": "Chromosomes to include in the analysis, without prefixes (e.g. 1, 2, 3, X, Y, etc).",
+                    "items": {
+                        "type": ["string", "integer"]
+                    }
+                }
+            }
+        },
+        "references": {
+            "title": "Reference files",
+            "type": "object",
+            "description": "Various reference files needed for pipeline execution.",
+            "required": [
+                "vep_cache",
+                "vep_cache_version",
+                "references",
+                "liftover_plugin"
+            ],
+            "properties": {
+                "vep_species": {
+                    "type": "string",
+                    "description": "Species to use for annotation",
+                    "default": "homo_sapiens"
+                },
+                "vep_cache": {
+                    "type": "string",
+                    "format": "dir-path",
+                    "exists": true,
+                    "description": "Path to VEP cache root directory.",
+                    "help_text": "This directory should have sub-directories for each species, and within that subdirectories for each VEP version.",
+                    "fa_icon": "fas fa-folder"
+                },
+                "vep_cache_version": {
+                    "type": "string",
+                    "description": "VEP cache version to use",
+                    "default": "113"
+                },
+                "liftover_plugin": {
+                    "type": "string",
+                    "description": "Path to the liftover plugin for bcftools, see https://github.com/freeseek/score"
+                },
+                "references": {
+                    "type": "object",
+                    "patternProperties": {
+                        ".+": {
+                            "type": "object",
+                            "properties": {
+                                "fasta": {
+                                    "type": "string",
+                                    "format": "file-path",
+                                    "exists": true,
+                                    "description": "Fasta file representing the genome."
+                                },
+                                "dict": {
+                                    "type": "string",
+                                    "format": "file-path",
+                                    "exists": true,
+                                    "description": "Fasta dictionary file."
+                                }
+                            }
+                        }
+                    }
+                },
+                "chainfiles": {
+                    "type": "object",
+                    "description": "Nested configuration of chain files. The first layer is the source genome, and the second layer represents the target genome.",
+                    "patternProperties": {
+                        ".+": {
+                            "type": "object",
+                            "patternProperties": {
+                                ".+": {
+                                    "type": "string",
+                                    "format": "file-path",
+                                    "exists": true,
+                                    "description": "Chain file for lift-over."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/references"
+        }
+    ]
+}
