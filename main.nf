@@ -1,5 +1,5 @@
-include { PIPELINE_INITIALISATION } from "./subworkflows/initialisation"
-include { VALP } from "./workflows/valp"
+include { PIPELINE_INITIALISATION } from "./subworkflows/initialisation.nf"
+include { VALP } from "./workflows/valp.nf"
 
 workflow {
     PIPELINE_INITIALISATION(params.input)
