@@ -9,6 +9,10 @@
     "items": {
         "type": "object",
         "properties": {
+            "truthset_name": {
+                "description": "Name of the truth set",
+                "type": "string"
+            },
             "truthset": {
                 "description": "Path to a VCF file for the truth set of variants",
                 "type": "string",
@@ -19,6 +23,10 @@
                 "type": "string",
                 "enum": ["GRCh37", "GRCh38"],
                 "default": "GRCh38"
+            },
+            "queryset_name": {
+                "description": "Name of the query set",
+                "type": "string"
             },
             "queryset": {
                 "description": "Path to a VCF file for the query set of variants",
@@ -42,7 +50,7 @@
                 "format": "file-path"
             }
         },
-        "required": ["truthset", "truthset_genome", "queryset", "queryset_genome"]
+        "required": ["truthset_name", "truthset", "truthset_genome", "queryset_name", "queryset", "queryset_genome"]
     },
     "errorMessage": "Expected at least one row in the input file"
 }

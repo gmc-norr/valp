@@ -15,37 +15,39 @@ workflow PIPELINE_INITIALISATION {
     def i = 1
     ch_input
         .tap { ch_original_input }
-        .map { x -> x[3] != x[1] }
+        .map { x -> x[5] != x[2] }
         .merge(ch_original_input)
         .map { x -> [
             [
                 id: i++,
-                truth_genome: x[2],
-                query_genome: x[4],
+                truthset_name: x[1],
+                truth_genome: x[3],
+                queryset_name: x[4],
+                query_genome: x[6],
                 liftover: x[0]
             ],
-            [x[1], x[3], x[5], x[6]]
+            [x[2], x[5], x[7], x[8]]
         ]}
         .multiMap { meta, files ->
             truth: [
                 [
                     id: meta.id,
+                    sample: meta.truthset_name,
                     genome: meta.truth_genome,
                     type: "truth",
                     liftover: meta.liftover,
                     liftover_to: meta.liftover ? meta.query_genome : null,
-                    conf_regions: files[2]
                 ],
                 files[0]
             ]
             query: [
                 [
                     id: meta.id,
+                    sample: meta.queryset_name,
                     genome: meta.query_genome,
                     type: "query",
                     liftover: false,
                     liftover_to: null,
-                    conf_regions: meta.liftover ? files[3] : files[2]
                 ],
                 files[1]
             ] 

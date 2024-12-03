@@ -29,11 +29,11 @@ workflow VALP {
         .map { meta, vcf -> [[
             id: meta.id,
             genome: meta.liftover ? meta.liftover_to : meta.genome,
-        ], [type: meta.type, original_genome: meta.genome, vcf: vcf]] }
+        ], [type: meta.type, sample: meta.sample, original_genome: meta.genome, vcf: vcf]] }
         .groupTuple(size: 2, sort: { a, b ->
             return a.type == 'query' ? -1 : 1
         })
-        .map { meta, x -> [meta + [original_query_genome: x[0].original_genome, original_truth_genome: x[1].original_genome], x[0].vcf, x[1].vcf] }
+        .map { meta, x -> [meta + [original_query_genome: x[0].original_genome, original_truth_genome: x[1].original_genome, truthset_name: x[0].sample, queryset_name: x[1].sample], x[0].vcf, x[1].vcf] }
         .set { ch_processed_pairs }
 
     ch_processed_pairs
