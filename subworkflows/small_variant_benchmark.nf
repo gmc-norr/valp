@@ -9,9 +9,14 @@ workflow SMALL_VARIANT_BENCHMARK {
     fai
 
     main:
+    // Only consider id and genome when joining
     vcf_pairs
+        .map { meta, query, truth -> [[id: meta.id, genome: meta.genome], meta, query, truth] }
         .join(regions)
         .join(target)
+        .map { meta1, meta2, query, truth, regions, target ->
+            [meta2, query, truth, regions, target]
+        }
         .set { ch_comparison_input }
 
     HAPPY_HAPPY(
@@ -24,6 +29,6 @@ workflow SMALL_VARIANT_BENCHMARK {
     )
 
     emit:
-    summary_csv = HAPPY_HAPPY.out.summary_csv
-    extended_csv = HAPPY_HAPPY.out.extended_csv
+    happy_summary = HAPPY_HAPPY.out.summary_csv
+    happy_extended = HAPPY_HAPPY.out.extended_csv
 }

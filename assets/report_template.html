@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+    <head>
+        <title></title>
+        <meta charset="utf-8" />
+        {% for css_style in css %}
+        <style>
+            {{ css_style | trim | indent(width=12) }}
+        </style>
+        {% endfor %}
+    </head>
+    <body>
+        <header>
+            <h1>WGS benchmark report</h1>
+        </header>
+        <main>
+            <section>
+                <h2>Comparisons</h2>
+                {% for comp in comparisons %}
+                <div>
+                    <div><p>{{ comp.id }}</p></div>
+                    <table>
+                        <tr>
+                            <th>Genome used for comparison</th>
+                            <td>{{ comp.genome }}</td>
+                        </tr>
+                        <tr>
+                            <th>Truth set original genome</th>
+                            <td>{{ comp.original_truth_genome }}</td>
+                        </tr>
+                    </table>
+                </div>
+                {% endfor %}
+            </section>
+        </main>
+        <script>
+            const jsonData = {{ json_data }};
+        </script>
+        {% for script in js %}
+        <script>
+            {{ script | trim | indent(width=12) }}
+        </script>
+        {% endfor %}
+    </body>
+</html>

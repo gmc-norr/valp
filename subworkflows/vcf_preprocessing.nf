@@ -31,14 +31,6 @@ workflow VCF_PREPROCESSING {
     )
 
     BCFTOOLS_PLUGINLIFTOVER.out.vcf
-        // Set new reference for the files that have been subjected to liftover
-        .map { meta, vcf -> 
-            def newMeta = meta.clone()
-            newMeta.genome = meta.liftover_to
-            newMeta.liftover = false
-            newMeta.liftover_to = null
-            [newMeta, vcf]
-        }
         // Collect all VCFs in a single channel
         .mix(ch_vcf.no_liftover)
         .set { ch_liftover_vcf }
