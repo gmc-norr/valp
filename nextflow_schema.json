@@ -12,7 +12,8 @@
             "description": "Define where the pipeline should find input data and save output data.",
             "required": [
                 "input",
-                "include_chr"
+                "include_chr",
+                "outdir"
             ],
             "properties": {
                 "input": {
@@ -32,6 +33,11 @@
                     "items": {
                         "type": ["string", "integer"]
                     }
+                },
+                "outdir": {
+                    "type": "string",
+                    "format": "dir-path",
+                    "description": "Path where pipeline output should be written."
                 }
             }
         },
