@@ -10,27 +10,76 @@
         {% endfor %}
     </head>
     <body>
-        <header>
+        <header class="text-6xl mx-4 my-6">
             <h1>WGS benchmark report</h1>
         </header>
-        <main>
-            <section>
-                <h2>Comparisons</h2>
+        <main class="mx-4 my-6">
+            <section class="my-16">
+                <h2 class="text-4xl my-8">Comparisons</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 m-4">
                 {% for comp in comparisons %}
-                <div>
-                    <div><p>{{ comp.id }}</p></div>
+                    <div class="comparison-info flex justify-around gap-4 items-center bg-gray-100 px-6 py-3" data-id="{{ comp.id }}" >
+                        <div class="text-4xl text-center"><p>{{ comp.id }}</p></div>
+                        <table display="block">
+                            <tr>
+                                <th class="text-right pr-2">Truth set</th>
+                                <td>{{ comp.truthset_name }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-right pr-2">Query set</th>
+                                <td>{{ comp.queryset_name }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-right pr-2">Genome used for comparison</th>
+                                <td>{{ comp.genome }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-right pr-2">Truth set original genome</th>
+                                <td>{{ comp.original_truth_genome }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                {% endfor %}
+                </div>
+            </section>
+
+            <section class="my-16">
+                <h2 class="text-4xl my-8">hap.py summary</h2>
+                {#<select>
+                    {% for name in comparisons[0].happy_summary.column_names %}
+                    <option>{{ name }}</option>
+                    {% endfor %}
+                </select>#}
+                <div class="overflow-auto">
                     <table>
-                        <tr>
-                            <th>Genome used for comparison</th>
-                            <td>{{ comp.genome }}</td>
-                        </tr>
-                        <tr>
-                            <th>Truth set original genome</th>
-                            <td>{{ comp.original_truth_genome }}</td>
-                        </tr>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                {% for name in comparisons[0].happy_summary.column_names %}
+                                <th>{{ name }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for comp in comparisons %}
+                            {% for row in comp.happy_summary.rows %}
+                            <tr data-id="{{ comp.id }}">
+                                <td>{{ comp.id }}</td>
+                                {% for key in comp.happy_summary.column_names %}
+                                    {% if row[key] is float %}
+                                    <td class="text-right">{{ "{0:,.2f}".format(row[key]) }}</td>
+                                    {% elif row[key] is integer %}
+                                    <td class="text-right">{{ "{0:,d}".format(row[key]) }}</td>
+                                    {% else %}
+                                    <td>{{ row[key] }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                            {% endfor %}
+                        </tbody>
                     </table>
                 </div>
-                {% endfor %}
             </section>
         </main>
         <script>
