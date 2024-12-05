@@ -8,6 +8,7 @@ workflow VALP {
     queryset // queue channel with query set VCFs (meta, vcf)
     confRegions // queue channel with confident regions that should be used for comparison
     limitRegions // not used at the moment
+    d4 // queue channel with d4 coverage files for the query (meta, d4)
 
     main:
     truthset

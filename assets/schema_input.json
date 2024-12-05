@@ -42,12 +42,20 @@
             "conf_regions": {
                 "description": "Path to a BED file containing high-confidence regions in the reference genome of the query set that should be used for the comparison.",
                 "type": "string",
-                "format": "file-path"
+                "format": "file-path",
+                "pattern": "^\\S+\\.bed$"
             },
             "limit_regions": {
                 "description": "Path to a BED file containing regions that the analysis should be limited to. These could for example be when comparin WES or panel data with WGS data and you want to limit the comparison to captured regions of the genome. The genome version should match with the query set",
                 "type": "string",
-                "format": "file-path"
+                "format": "file-path",
+                "pattern": "^\\S+\\.bed$"
+            },
+            "coverage": {
+                "description": "Path to a d4 file that represents the coverage in the query sample.",
+                "type": "string",
+                "format": "file-path",
+                "pattern": "^\\S+\\.d4$"
             }
         },
         "required": ["truthset_name", "truthset", "truthset_genome", "queryset_name", "queryset", "queryset_genome"]
