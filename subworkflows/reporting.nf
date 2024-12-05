@@ -18,7 +18,7 @@ workflow REPORTING {
 
     ch_all_results
         .collectFile(newLine: false, keepHeader: true){ meta, summary, extended ->
-            ["report_input_files.csv", "id,genome,original_truth_genome,happy_summary,happy_extended\n${meta.id},${meta.genome},${meta.original_truth_genome},${summary},${extended}\n"]
+            ["report_input_files.csv", "id,genome,original_truth_genome,truthset_name,queryset_name,happy_summary,happy_extended\n${meta.id},${meta.genome},${meta.original_truth_genome},${meta.truthset_name},${meta.queryset_name},${summary},${extended}\n"]
         }
         .map { [[id: "all"], it] }
         .set { ch_happy_files }
