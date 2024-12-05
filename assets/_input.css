@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.comparison-info.highlight {
+  @apply bg-blue-200;
+}
+
+tr.highlight {
+  @apply bg-blue-200;
+}

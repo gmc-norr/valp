@@ -18,7 +18,7 @@
                 <h2 class="text-4xl my-8">Comparisons</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 m-4">
                 {% for comp in comparisons %}
-                    <div class="comparison-info flex justify-around gap-4 items-center bg-gray-100 px-6 py-3" data-id="{{ comp.id }}" >
+                    <div class="comparison-info flex justify-around gap-4 items-center bg-gray-100 hover:bg-blue-200 px-6 py-3" data-id="{{ comp.id }}" >
                         <div class="text-4xl text-center"><p>{{ comp.id }}</p></div>
                         <table display="block">
                             <tr>
@@ -63,7 +63,7 @@
                         <tbody>
                             {% for comp in comparisons %}
                             {% for row in comp.happy_summary.rows %}
-                            <tr data-id="{{ comp.id }}">
+                            <tr data-id="{{ comp.id }}" class="hover:bg-blue-200">
                                 <td>{{ comp.id }}</td>
                                 {% for key in comp.happy_summary.column_names %}
                                     {% if row[key] is float %}
