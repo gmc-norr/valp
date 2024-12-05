@@ -3,6 +3,31 @@
 import argparse
 import csv
 import json
+from typing import Tuple, Union
+
+def parse_int(x: str) -> Tuple[bool, int]:
+    try:
+        ix = int(x)
+        return True, ix
+    except ValueError:
+        return False, 0
+
+def parse_float(x: str) -> Tuple[bool, float]:
+    try:
+        ix = float(x)
+        return True, ix
+    except ValueError:
+        return False, 0
+
+def parse_json_value(x: str) -> Union[int, float, str]:
+    ok, v = parse_int(x)
+    if ok:
+        return v
+    ok, v = parse_float(x)
+    if ok:
+        return v
+    return x
+
 
 def main(csvfile, outfile):
     rows = []
@@ -12,7 +37,7 @@ def main(csvfile, outfile):
         for row in reader:
             new_row = {}
             for k, v in row.items():
-                new_row[k.lower()] = v
+                new_row[k.lower()] = parse_json_value(v)
             rows.append(new_row)
 
     json_string = json.dumps({"column_names": list(rows[0].keys()), "rows": rows})
