@@ -31,11 +31,18 @@ def global_coverage(
     bin_size: Optional[int] = None,
 ):
     res = []
+    if bin_size is None:
+        max_length = 0
+        for name, length in d4.chroms():
+            if include_chroms is not None and name not in include_chroms:
+                continue
+            if length > max_length:
+                max_length = length
+        bin_size = int(np.ceil(max_length / 200))
+
     for name, length in d4.chroms():
         if include_chroms is not None and name not in include_chroms:
             continue
-        if bin_size is None:
-            bs = int(np.ceil(length / 200))
         res.append(
             {
                 "chromosome": name,
@@ -44,8 +51,8 @@ def global_coverage(
                 "length": length,
                 "name": name,
                 "mean_coverage": d4.mean(name),
-                "bin_size": bs,
-                "coverage": list(d4.resample(name, bin_size=bs)[0]),
+                "bin_size": bin_size,
+                "coverage": list(d4.resample(name, bin_size=bin_size)[0]),
             }
         )
     return res
@@ -57,10 +64,15 @@ def regional_coverage(
     bin_size: Optional[int] = None,
 ):
     res = []
+    if bin_size is None:
+        max_length = 0
+        for r in regions:
+            length = r[2] - r[1]
+            if length > max_length:
+                max_length = length
+        bin_size = int(np.ceil(max_length / 200))
+
     for r in regions:
-        length = r[2] - r[1]
-        if bin_size is None:
-            bs = int(np.ceil(length / 200))
         res.append(
             {
                 "chromosome": r[0],
@@ -69,8 +81,8 @@ def regional_coverage(
                 "length": length,
                 "name": r[3],
                 "mean_coverage": d4.mean(r[:3]),
-                "bin_size": bs,
-                "coverage": list(d4.resample(r[:3], bin_size=bs)[0]),
+                "bin_size": bin_size,
+                "coverage": list(d4.resample(r[:3], bin_size=bin_size)[0]),
             }
         )
     return res
@@ -123,12 +135,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--global-bin-size",
-        help="Bin size to use for global coverage. Default is a bin size that gives 200 bins for each chromosome.",
+        help="Bin size to use for global coverage. Default is a bin size that gives "
+            "200 bins for the longest included chromosome .",
         type=int,
     )
     parser.add_argument(
         "--regional-bin-size",
-        help="Bin size to use for global coverage. Default is a dynamic bin size that gives 200 bins for each region.",
+        help="Bin size to use for regional coverage. Default is a bin size that gives "
+            "200 bins for the longest region.",
         type=int,
     )
     args = parser.parse_args()
