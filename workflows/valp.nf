@@ -1,6 +1,7 @@
 include { VCF_PREPROCESSING } from '../subworkflows/vcf_preprocessing.nf'
 include { SMALL_VARIANT_BENCHMARK } from '../subworkflows/small_variant_benchmark.nf'
 include { REPORTING } from '../subworkflows/reporting.nf'
+include { COVERAGE } from '../subworkflows/coverage.nf'
 
 workflow VALP {
     take:
@@ -51,6 +52,12 @@ workflow VALP {
         limitRegions,
         ch_comparison_ref.fasta,
         ch_comparison_ref.fai
+    )
+
+    COVERAGE(
+        d4.filter { meta, d4 -> d4 != [] },
+        params.include_chr,
+        [[], []] // no regions for now
     )
 
     REPORTING(
