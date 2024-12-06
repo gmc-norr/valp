@@ -72,7 +72,7 @@ def main(
     report = render_template(
         template,
         sorted(comparisons, key=lambda x: x["id"]),
-        coverage_results,
+        sorted(coverage_results, key=lambda x: x["id"]),
         files_to_strings(javascript) if javascript else None,
         files_to_strings(css) if css else None,
     )
