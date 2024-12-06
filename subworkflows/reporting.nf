@@ -6,6 +6,7 @@ workflow REPORTING {
     take:
     happy_summaries
     happy_extended
+    coverage_stats
 
     main:
     // Convert csv to json
@@ -23,12 +24,20 @@ workflow REPORTING {
         .map { [[id: "all"], it] }
         .set { ch_happy_files }
 
+    coverage_stats
+        .collectFile(newLine: false, keepHeader: true){ meta, json ->
+            ["report_coverage_json_files.csv", "id,sample,genome,json\n${meta.id},${meta.sample},${meta.genome},${json}\n"]
+        }
+        .map { [[id: "all"], it] }
+        .set { ch_coverage_files }
+    
     Channel.fromPath("${projectDir}/assets/report_template.html").first().set { ch_template }
     Channel.fromPath(["${projectDir}/assets/d3.v7.min.js", "${projectDir}/assets/main.js"]).collect().set { ch_js }
     Channel.fromPath(["${projectDir}/assets/report_style.css"]).collect().set { ch_css }
 
     BENCHMARK_REPORT(
         ch_happy_files,
+        ch_coverage_files,
         ch_template,
         ch_js,
         ch_css

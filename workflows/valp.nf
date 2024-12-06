@@ -62,6 +62,7 @@ workflow VALP {
 
     REPORTING(
         SMALL_VARIANT_BENCHMARK.out.happy_summary,
-        SMALL_VARIANT_BENCHMARK.out.happy_extended
+        SMALL_VARIANT_BENCHMARK.out.happy_extended,
+        COVERAGE.out.coverage_json
     )
 }

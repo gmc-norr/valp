@@ -4,6 +4,7 @@ process BENCHMARK_REPORT {
 
     input:
     tuple val(meta), val(happy_output)
+    tuple val(meta2), val(coverage_csv)
     val(report_template)
     val(js)
     val(css)
@@ -21,7 +22,8 @@ process BENCHMARK_REPORT {
         ${css_arg} \\
         ${js_arg} \\
         ${template_arg} \\
-        --happy-results ${happy_output} \\
+        --happy-csv ${happy_output} \\
+        --coverage-csv ${coverage_csv} \\
         --output ${prefix}.benchmark_report.html
     """
 }

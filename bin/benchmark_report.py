@@ -29,13 +29,14 @@ def files_to_strings(filenames):
     return file_contents
 
 
-def render_template(template, comparisons, js, css):
+def render_template(template, comparisons, coverage_json, js, css):
     with open(template) as f:
         t = jinja2.Template(source=f.read())
 
     return t.render(
         comparisons=comparisons,
         json_data=json.dumps(comparisons),
+        coverage_json=json.dumps(coverage_json),
         js=js,
         css=css,
     )
@@ -46,22 +47,34 @@ def main(
     javascript: Optional[List[Union[str, Path]]],
     css: Optional[List[Union[str, Path]]],
     happy_csv: List[Union[str, Path]],
+    coverage_csv: Optional[Union[str, Path]],
     output: Optional[Union[str, Path]],
 ):
-    results = read_csv(happy_csv)
+    happy_results = read_csv(happy_csv)
     comparisons = []
-    for comp in results:
+    for comp in happy_results:
         hsum = read_json(comp["happy_summary"])
         hext = read_json(comp["happy_extended"])
         comp["happy_summary"] = hsum
         comp["happy_extended"] = hext
         comparisons.append(comp)
 
+    coverage_results = []
+    if coverage_csv is not None:
+        for line in read_csv(coverage_csv):
+            coverage_results.append(dict(
+                id=line["id"],
+                sample=line["sample"],
+                genome=line["genome"],
+                coverage=read_json(line["json"]),
+            ))
+
     report = render_template(
         template,
         sorted(comparisons, key=lambda x: x["id"]),
-        files_to_strings(javascript),
-        files_to_strings(css),
+        coverage_results,
+        files_to_strings(javascript) if javascript else None,
+        files_to_strings(css) if css else None,
     )
 
     if output is None:
@@ -74,7 +87,16 @@ def main(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--happy-results", dest="happy_csv", help="CSV file with results from hap.py", type=Path
+        "--happy-csv",
+        dest="happy_csv",
+        help="CSV file with results from hap.py.",
+        type=Path,
+    )
+    parser.add_argument(
+        "--coverage-csv",
+        dest="coverage_csv",
+        help="CSV file with coverage results.",
+        type=Path,
     )
     parser.add_argument(
         "--template",
@@ -109,4 +131,4 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    main(args.template, args.js, args.css, args.happy_csv, args.output)
+    main(args.template, args.js, args.css, args.happy_csv, args.coverage_csv, args.output)

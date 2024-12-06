@@ -53,7 +53,7 @@ workflow PIPELINE_INITIALISATION {
             ] 
             conf_regions: [[id: meta.id, genome: meta.query_genome], files[2]]
             limit_regions: [[id: meta.id, genome: meta.query_genome], files[3]]
-            d4: [[id: meta.id, genome: meta.query_genome], files[4]]
+            d4: [[id: meta.id, sample: meta.queryset_name, genome: meta.query_genome], files[4]]
         }
         .set { ch_comparisons }
 
