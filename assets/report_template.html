@@ -81,6 +81,16 @@
                     </table>
                 </div>
             </section>
+
+            <section class="my-16">
+                <h2 class="text-4xl my-8">Coverage</h2>
+                {% for comp in comparisons %}
+                <div id="global-coverage-{{ comp.id }}">
+                    <h3 class="text-2xl my-6">{{ comp.id }} &ndash; {{ comp.queryset_name }}</h3>
+                    <p class="plot-description">No coverage data available.</p>
+                </div>
+                {% endfor %}
+            </section>
         </main>
         <script>
             const jsonData = {{ json_data }};
