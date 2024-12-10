@@ -60,7 +60,7 @@ function regionCoveragePlot(config) {
 
     const minX = data.start;
     const maxX = data.end;
-    const maxY = Math.max(5, data.coverage.reduce((acc, x) => x > acc ? x : acc));
+    const maxY = 1.1 * Math.max(5, data.coverage.reduce((acc, x) => x > acc ? x : acc));
 
     const svg = d3.select(parent)
         .selectAll("svg")
@@ -207,7 +207,7 @@ function chromosomeCoveragePlot(config) {
         .attr("height", height);
 
     const maxX = data.reduce((acc, x) => acc + x.length, 0);
-    const maxY = data.reduce((acc, x) => {
+    const maxY = 1.1 * data.reduce((acc, x) => {
         let chrMax = x.coverage.reduce((acc, x) => x > acc ? x : acc, 0);
         return chrMax > acc ? chrMax : acc;
     }, 0)
