@@ -14,7 +14,7 @@ function showTooltip(evt, message) {
         .join(
             enter => enter
                 .append("div")
-                .attr("class", "mouse-tooltip")
+                .attr("class", "mouse-tooltip bg-gray-100 rounded border border-gray-400 text-sm px-3 py-2 opacity-75")
                 .style("position", "fixed")
                 .style("top", `${y + 20}px`)
                 .style("left", `${x}px`)
