@@ -82,10 +82,9 @@ function regionCoveragePlot(config) {
             .tickFormat((x) => (x / 1e6).toLocaleString()));
     yAxis = (g) => g.call(d3.axisLeft(yScale).ticks(5));
 
-    const areaGenerator = d3.area()
+    const lineGenerator = d3.line()
         .x((d) => xScale(d.x))
-        .y0(yScale(0))
-        .y1((d) => yScale(d.y));
+        .y((d) => yScale(d.y));
 
     svg
         .selectAll(".x-axis")
@@ -147,7 +146,6 @@ function regionCoveragePlot(config) {
         .join("g")
         .classed("plot-area", true)
         .attr("transform", `translate(${margin.left},${margin.top})`)
-        .attr("fill", "#AAD1F2")
         .selectAll("path")
         .data((d) => {
             return [d.coverage.map((d, i) => {
@@ -157,11 +155,17 @@ function regionCoveragePlot(config) {
         .join(
             (enter) => enter
                 .append("path")
-                .attr("d", (d) => areaGenerator(d)),
+                .attr("d", (d) => lineGenerator(d))
+                .attr("fill", "transparent")
+                .attr("stroke", "black"),
             (update) => update
                 .transition()
                 .duration(300)
-                .attr("d", (d) => areaGenerator(d)),
+                .attrTween("d", function(d) {
+                    let previous = d3.select(this).attr("d");
+                    let current = lineGenerator(d);
+                    return d3.interpolatePath(previous, current);
+                }),
             (exit) => exit.remove()
         );
 }

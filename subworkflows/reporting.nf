@@ -34,6 +34,7 @@ workflow REPORTING {
     Channel.fromPath("${projectDir}/assets/report_template.html").first().set { ch_template }
     Channel.fromPath([
         "${projectDir}/assets/d3.v7.min.js",
+        "${projectDir}/assets/d3-interpolate-path.js",
         "${projectDir}/assets/main.js",
         "${projectDir}/assets/coverage_plots.js"
     ]).collect().set { ch_js }
