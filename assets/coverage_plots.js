@@ -291,22 +291,13 @@ function chromosomeCoveragePlot(config) {
     svg
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`)
-        .selectAll("circle")
-        .data(cumulativeData.points)
-        .join("circle")
-        .attr("cx", (d) => xScale(d.x))
-        .attr("cy", (d) => yScale(d.y))
-        .attr("r", 2)
-        .on("mouseenter mousemove", (evt, data) => {
-            evt.preventDefault();
-            d3.select(evt.target).attr("r", 4);
-            const message = `${roundToDecimals(data.y, 2)}`;
-            showTooltip(evt, message);
-        })
-        .on("mouseleave", (evt) => {
-            d3.select(evt.target).attr("r", 2);
-            hideTooltip();
-        });
+        .selectAll("path")
+        .data([cumulativeData.points])
+        .join("path")
+        .attr("d", d3.line().x((d) => xScale(d.x)).y((d) => yScale(d.y)))
+        .attr("fill", "transparent")
+        .attr("stroke", "black")
+        .attr("pointer-events", "none");
 }
 
 for (plotData of coverageData) {
