@@ -56,6 +56,12 @@
                 "type": "string",
                 "format": "file-path",
                 "pattern": "^\\S+\\.d4$"
+            },
+            "coverage_regions": {
+                "description": "Path to a bed file with regions that should be focused on in the coverage analysis. Coordinates represent the genome version used for the query set.",
+                "type": "string",
+                "format": "file-path",
+                "pattern": "^\\S+\\.bed$"
             }
         },
         "required": ["truthset_name", "truthset", "truthset_genome", "queryset_name", "queryset", "queryset_genome"]

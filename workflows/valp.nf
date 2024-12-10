@@ -10,6 +10,7 @@ workflow VALP {
     confRegions // queue channel with confident regions that should be used for comparison
     limitRegions // not used at the moment
     d4 // queue channel with d4 coverage files for the query (meta, d4)
+    coverage_regions // queue channel with bed files for focused coverage analysis (meta, bed)
 
     main:
     truthset
@@ -54,10 +55,19 @@ workflow VALP {
         ch_comparison_ref.fai
     )
 
+    d4
+        .filter { meta, d4 -> d4 != [] }
+        .join(coverage_regions)
+        .multiMap { meta, d4, bed ->
+            d4: [meta, d4]
+            bed: [meta, bed]
+        }
+        .set { ch_coverage }
+
     COVERAGE(
-        d4.filter { meta, d4 -> d4 != [] },
+        ch_coverage.d4,
         params.include_chr,
-        [[], []] // no regions for now
+        ch_coverage.bed
     )
 
     REPORTING(

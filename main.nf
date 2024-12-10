@@ -9,6 +9,7 @@ workflow {
         PIPELINE_INITIALISATION.out.queryset,
         PIPELINE_INITIALISATION.out.confRegions,
         PIPELINE_INITIALISATION.out.limitRegions,
-        PIPELINE_INITIALISATION.out.d4
+        PIPELINE_INITIALISATION.out.d4,
+        PIPELINE_INITIALISATION.out.coverage_regions
     )
 }

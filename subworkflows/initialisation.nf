@@ -26,7 +26,7 @@ workflow PIPELINE_INITIALISATION {
                 query_genome: x[6],
                 liftover: x[0]
             ],
-            [x[2], x[5], x[7], x[8], x[9]]
+            [x[2], x[5], x[7], x[8], x[9], x[10]]
         ]}
         .multiMap { meta, files ->
             truth: [
@@ -54,6 +54,7 @@ workflow PIPELINE_INITIALISATION {
             conf_regions: [[id: meta.id, genome: meta.query_genome], files[2]]
             limit_regions: [[id: meta.id, genome: meta.query_genome], files[3]]
             d4: [[id: meta.id, sample: meta.queryset_name, genome: meta.query_genome], files[4]]
+            coverage_regions: [[id: meta.id, sample: meta.queryset_name, genome: meta.query_genome], files[5]]
         }
         .set { ch_comparisons }
 
@@ -63,4 +64,5 @@ workflow PIPELINE_INITIALISATION {
     confRegions = ch_comparisons.conf_regions
     limitRegions = ch_comparisons.limit_regions
     d4 = ch_comparisons.d4
+    coverage_regions = ch_comparisons.coverage_regions
 }

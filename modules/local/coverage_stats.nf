@@ -12,7 +12,7 @@ process COVERAGE_STATS {
     script:
     def include = include_chr ? "--include ${include_chr.join(',')}" : ""
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def regions = bed ? "--regisons ${bed}" : ""
+    def regions = bed ? "--regions ${bed}" : ""
     """
     coverage_stats.py \\
         ${include} \\
