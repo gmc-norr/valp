@@ -60,7 +60,7 @@ function regionCoveragePlot(config) {
 
     const minX = data.start;
     const maxX = data.end;
-    const maxY = data.coverage.reduce((acc, x) => x > acc ? x : acc);
+    const maxY = Math.max(5, data.coverage.reduce((acc, x) => x > acc ? x : acc));
 
     const svg = d3.select(parent)
         .selectAll("svg")
@@ -80,7 +80,12 @@ function regionCoveragePlot(config) {
     xAxis = (g) => g.call(
         d3.axisBottom(xScale)
             .tickFormat((x) => (x / 1e6).toLocaleString()));
-    yAxis = (g) => g.call(d3.axisLeft(yScale));
+    yAxis = (g) => g.call(d3.axisLeft(yScale).ticks(5));
+
+    const areaGenerator = d3.area()
+        .x((d) => xScale(d.x))
+        .y0(yScale(0))
+        .y1((d) => yScale(d.y));
 
     svg
         .selectAll(".x-axis")
@@ -142,21 +147,21 @@ function regionCoveragePlot(config) {
         .join("g")
         .classed("plot-area", true)
         .attr("transform", `translate(${margin.left},${margin.top})`)
-        .selectAll("circle")
-        .data((d) => d.coverage)
+        .attr("fill", "#AAD1F2")
+        .selectAll("path")
+        .data((d) => {
+            return [d.coverage.map((d, i) => {
+                return {x: minX + i * binSize, y: d};
+            })];
+        })
         .join(
             (enter) => enter
-                .append("circle")
-                .attr("cx", (_, i) => xScale(minX + i * binSize))
-                .attr("cy", (d) => yScale(d))
-                .attr("r", 2),
-            (update) => {
-                return update
-                    .transition()
-                    .duration(300)
-                    .attr("cx", (_, i) => xScale(minX + i * binSize))
-                    .attr("cy", (d) => yScale(d));
-            },
+                .append("path")
+                .attr("d", (d) => areaGenerator(d)),
+            (update) => update
+                .transition()
+                .duration(300)
+                .attr("d", (d) => areaGenerator(d)),
             (exit) => exit.remove()
         );
 }
