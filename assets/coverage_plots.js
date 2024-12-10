@@ -52,12 +52,6 @@ function regionCoveragePlot(config) {
     const binSize = data.bin_size;
     const chromosome = data.chromosome;
 
-    d3.select(parent)
-        .select("p.plot-description")
-        .text(`Coverage data across all chromosomes included in the analysis.
-               Each point represents the average coverage for a ${binSize.toLocaleString()} bp region.
-               Alternating colours denote chromosome boundaries.`)
-
     const minX = data.start;
     const maxX = data.end;
     const maxY = 1.1 * Math.max(5, data.coverage.reduce((acc, x) => x > acc ? x : acc));
@@ -168,6 +162,16 @@ function regionCoveragePlot(config) {
                 }),
             (exit) => exit.remove()
         );
+
+    d3.select(parent)
+        .selectAll("p.plot-description")
+        .data([1])
+        .join("p")
+        .classed("plot-description", true)
+        .text(`Each point represents the average coverage for a ${binSize.toLocaleString()} bp region.
+               The average coverage is ${roundToDecimals(data.mean_coverage, 1).toLocaleString()} over
+               ${data.length.toLocaleString()} bp.`)
+
 }
 
 function chromosomeCoveragePlot(config) {
