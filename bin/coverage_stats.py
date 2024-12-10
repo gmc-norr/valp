@@ -19,7 +19,7 @@ def parse_regions(filename: Path) -> List[Tuple[str, int, int, str]]:
                     line[0],
                     int(line[1]),
                     int(line[2]),
-                    line[3] if len(line) > 3 else "",
+                    line[3] if len(line) > 3 else f"{line[0]}:{line[1]}-{line[2]}",
                 )
             )
     return regions
@@ -64,15 +64,11 @@ def regional_coverage(
     bin_size: Optional[int] = None,
 ):
     res = []
-    if bin_size is None:
-        max_length = 0
-        for r in regions:
-            length = r[2] - r[1]
-            if length > max_length:
-                max_length = length
-        bin_size = int(np.ceil(max_length / 200))
-
+    dynamic_bins = bin_size is None
     for r in regions:
+        length = r[2] - r[1]
+        if dynamic_bins:
+            bin_size = int(np.ceil(length / 200))
         res.append(
             {
                 "chromosome": r[0],

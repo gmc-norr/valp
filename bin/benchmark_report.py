@@ -29,14 +29,13 @@ def files_to_strings(filenames):
     return file_contents
 
 
-def render_template(template, comparisons, coverage_json, js, css):
+def render_template(template, comparisons, coverage, js, css):
     with open(template) as f:
         t = jinja2.Template(source=f.read())
 
     return t.render(
         comparisons=comparisons,
-        json_data=json.dumps(comparisons),
-        coverage_json=json.dumps(coverage_json),
+        coverage=coverage,
         js=js,
         css=css,
     )
@@ -62,17 +61,19 @@ def main(
     coverage_results = []
     if coverage_csv is not None:
         for line in read_csv(coverage_csv):
-            coverage_results.append(dict(
-                id=line["id"],
-                sample=line["sample"],
-                genome=line["genome"],
-                coverage=read_json(line["json"]),
-            ))
+            coverage_results.append(
+                dict(
+                    id=line["id"],
+                    sample=line["sample"],
+                    genome=line["genome"],
+                    coverage=read_json(line["json"]),
+                )
+            )
 
     report = render_template(
         template,
-        sorted(comparisons, key=lambda x: x["id"]),
-        sorted(coverage_results, key=lambda x: x["id"]),
+        dict((c["id"], c) for c in sorted(comparisons, key=lambda x: x["id"])),
+        dict((c["id"], c) for c in sorted(coverage_results, key=lambda x: x["id"])),
         files_to_strings(javascript) if javascript else None,
         files_to_strings(css) if css else None,
     )

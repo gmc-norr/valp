@@ -17,7 +17,7 @@
             <section class="my-16">
                 <h2 class="text-4xl my-8">Comparisons</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 m-4">
-                {% for comp in comparisons %}
+                {% for comp_id, comp in comparisons.items() %}
                     <div class="comparison-info flex justify-around gap-4 items-center bg-gray-100 hover:bg-blue-200 px-6 py-3" data-id="{{ comp.id }}" >
                         <div class="text-4xl text-center"><p>{{ comp.id }}</p></div>
                         <table display="block">
@@ -55,13 +55,14 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                {% for name in comparisons[0].happy_summary.column_names %}
+                                {% set comp = comparisons.values() | first %}
+                                {% for name in comp.happy_summary.column_names %}
                                 <th>{{ name }}</th>
                                 {% endfor %}
                             </tr>
                         </thead>
                         <tbody>
-                            {% for comp in comparisons %}
+                            {% for comp in comparisons.values() %}
                             {% for row in comp.happy_summary.rows %}
                             <tr data-id="{{ comp.id }}" class="hover:bg-blue-200">
                                 <td>{{ comp.id }}</td>
@@ -84,17 +85,38 @@
 
             <section class="my-16">
                 <h2 class="text-4xl my-8">Coverage</h2>
-                {% for comp in comparisons %}
-                <div id="global-coverage-{{ comp.id }}">
+                {% for comp in comparisons.values() %}
+                <div>
                     <h3 class="text-2xl my-6">{{ comp.id }} &ndash; {{ comp.queryset_name }}</h3>
-                    <p class="plot-description">No coverage data available.</p>
+                    {% if comp.id not in coverage %}
+                    <p>No coverage data avaliable.</p>
+                    {% else %}
+                    <div id="global-coverage-{{ comp.id }}">
+                        <h4 class="text-xl my-4">Global coverage</h4>
+                        <p class="plot-description">There is data here!</p>
+                    </div>
+                    <div id="regional-coverage-{{ comp.id }}">
+                        <h4 class="text-xl my-4">Regional coverage</h4>
+                        {% if coverage[comp.id].coverage.regional_coverage | length > 0 %}
+                        <select data-id="{{ comp.id }}" class="coverage-region-selector">
+                            {% for region in coverage[comp.id].coverage.regional_coverage %}
+                            <option value="{{ loop.index0 }}">{{ region.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div data-id="{{ comp.id }}" class="regional-coverage">
+                        </div>
+                        {% else %}
+                        <p>No regional coverage available</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </section>
         </main>
         <script>
-            const jsonData = {{ json_data }};
-            const coverageData = {{ coverage_json }};
+            const jsonData = {{ comparisons.values() | list | tojson }};
+            const coverageData = {{ coverage.values() | list | tojson }};
         </script>
         {% for script in js %}
         <script>

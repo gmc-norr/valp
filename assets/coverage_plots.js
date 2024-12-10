@@ -32,6 +32,135 @@ function hideTooltip() {
     d3.selectAll(".mouse-tooltip").remove();
 }
 
+function regionCoveragePlot(config) {
+    const parent = config.parent ? config.parent : "body";
+    const width = config.width ? config.width : 800;
+    const height = config.height ? config.height : 200;
+    const data = config.data;
+
+    const margin = {
+        top: 20,
+        right: 20,
+        bottom: 50,
+        left: 60,
+    };
+
+    if (data === undefined) {
+        throw Error("no data supplied to CoveragePlot")
+    }
+
+    const binSize = data.bin_size;
+    const chromosome = data.chromosome;
+
+    d3.select(parent)
+        .select("p.plot-description")
+        .text(`Coverage data across all chromosomes included in the analysis.
+               Each point represents the average coverage for a ${binSize.toLocaleString()} bp region.
+               Alternating colours denote chromosome boundaries.`)
+
+    const minX = data.start;
+    const maxX = data.end;
+    const maxY = data.coverage.reduce((acc, x) => x > acc ? x : acc);
+
+    const svg = d3.select(parent)
+        .selectAll("svg")
+        .data([data])
+        .join("svg")
+        .attr("preserveAspectRatio", "xMinYMin meet")
+        .attr("viewBox", [0, 0, width, height])
+        .attr("width", width)
+        .attr("height", height);
+
+    xScale = d3.scaleLinear()
+        .range([0, width - (margin.left + margin.right)])
+        .domain([minX, maxX]);
+    yScale = d3.scaleLinear()
+        .range([height - (margin.bottom + margin.top), 0])
+        .domain([0, maxY]);
+    xAxis = (g) => g.call(
+        d3.axisBottom(xScale)
+            .tickFormat((x) => (x / 1e6).toLocaleString()));
+    yAxis = (g) => g.call(d3.axisLeft(yScale));
+
+    svg
+        .selectAll(".x-axis")
+        .data([xAxis])
+        .join("g")
+        .classed("x-axis", true)
+        .attr("transform", `translate(${margin.left},${height - margin.bottom})`)
+        .transition()
+        .duration(300)
+        .call(xAxis);
+
+    svg
+        .selectAll(".y-axis")
+        .data([yAxis])
+        .join("g")
+        .classed("y-axis", true)
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .transition()
+        .duration(300)
+        .call(yAxis);
+
+    svg
+        .selectAll(".x-label") 
+        .data((d) => [d.chromosome])
+        .join(
+            (enter) => enter
+                .append("text")
+                .classed("x-label", true)
+                .attr("transform", `translate(${width / 2},${height})`)
+                .attr("text-anchor", "middle")
+                .attr("alignment-baseline", "after-edge")
+                .attr("opacity", 0)
+                .text((d) => `${d} genomic position (Mbp)`)
+                .transition()
+                .duration(300)
+                .attr("opacity", 1),
+            (update) => update
+                .attr("opacity", 0)
+                .transition()
+                .duration(300)
+                .text((d) => `${d} genomic position (Mbp)`)
+                .attr("opacity", 1),
+            (exit) => exit.remove()
+        );
+
+    svg
+        .selectAll(".y-label")
+        .data(["Coverage"])
+        .join("text")
+        .classed("y-label", true)
+        .attr("transform", `translate(0,${margin.top + (height - (margin.bottom + margin.top)) / 2}) rotate(270)`)
+        .attr("text-anchor", "middle")
+        .attr("alignment-baseline", "before-edge")
+        .text("Coverage");
+
+    svg
+        .selectAll(".plot-area")
+        .data((d) => [d])
+        .join("g")
+        .classed("plot-area", true)
+        .attr("transform", `translate(${margin.left},${margin.top})`)
+        .selectAll("circle")
+        .data((d) => d.coverage)
+        .join(
+            (enter) => enter
+                .append("circle")
+                .attr("cx", (_, i) => xScale(minX + i * binSize))
+                .attr("cy", (d) => yScale(d))
+                .attr("r", 2),
+            (update) => {
+                return update
+                    .transition()
+                    .duration(300)
+                    .attr("cx", (_, i) => xScale(minX + i * binSize))
+                    .attr("cy", (d) => yScale(d));
+            },
+            (exit) => exit.remove()
+        );
+}
+
 function chromosomeCoveragePlot(config) {
     const parent = config.parent ? config.parent : "body";
     const width = config.width ? config.width : 800;
@@ -177,3 +306,23 @@ for (plotData of coverageData) {
         data: plotData.coverage.global_coverage,
     })
 }
+
+const coverageSelector = d3.selectAll(".coverage-region-selector");
+coverageSelector.on("change", (evt) => {
+    const regionIndex = +evt.target.value;
+    const comparisonId = evt.target.dataset.id;
+    regionCoveragePlot({
+        parent: `.regional-coverage[data-id="${comparisonId}"]`,
+        data: coverageData.filter((d) => d.id === comparisonId)[0].coverage.regional_coverage[regionIndex]
+    });
+});
+
+for (cs of coverageSelector) {
+    const regionIndex = +cs.value;
+    const comparisonId = cs.dataset.id;
+    regionCoveragePlot({
+        parent: `.regional-coverage[data-id="${comparisonId}"]`,
+        data: coverageData.filter((d) => d.id === comparisonId)[0].coverage.regional_coverage[regionIndex]
+    });
+}
+
