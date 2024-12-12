@@ -179,7 +179,7 @@ function chromosomeCoveragePlot(config) {
     const width = config.width ? config.width : 800;
     const height = config.height ? config.height : 200;
     const data = config.data;
-
+    const absoluteMaxY = 100;
     const margin = {
         top: 20,
         right: 20,
@@ -197,12 +197,6 @@ function chromosomeCoveragePlot(config) {
 
     const bin_size = data[0].bin_size;
 
-    d3.select(parent)
-        .select("p.plot-description")
-        .text(`Coverage data across all chromosomes included in the analysis.
-               Each point represents the average coverage for a ${bin_size.toLocaleString()} bp region.
-               Alternating colours denote chromosome boundaries.`)
-
     const svg = d3.select(parent)
         .append("svg")
         .attr("preserveAspectRatio", "xMinYMin meet")
@@ -211,17 +205,30 @@ function chromosomeCoveragePlot(config) {
         .attr("height", height);
 
     const maxX = data.reduce((acc, x) => acc + x.length, 0);
-    const maxY = 1.1 * data.reduce((acc, x) => {
+    const maxY = data.reduce((acc, x) => {
         let chrMax = x.coverage.reduce((acc, x) => x > acc ? x : acc, 0);
         return chrMax > acc ? chrMax : acc;
-    }, 0)
+    }, 0);
+
+    let descriptionText = `Coverage data across all chromosomes included in the analysis.
+               Each point represents the average coverage for a ${bin_size.toLocaleString()} bp region.
+               Alternating colours denote chromosome boundaries.`;
+
+    if (maxY > absoluteMaxY) {
+        descriptionText += ` Coverage above ${absoluteMaxY} is hidden. Maximum coverage observed
+            was ${Math.round(maxY)}.`
+    }
+
+    d3.select(parent)
+        .select("p.plot-description")
+        .text(descriptionText);
 
     xScale = d3.scaleLinear()
         .range([0, width - (margin.left + margin.right)])
         .domain([0, maxX]);
     yScale = d3.scaleLinear()
         .range([height - (margin.bottom + margin.top), 0])
-        .domain([0, maxY]);
+        .domain([0, Math.min(absoluteMaxY, 1.1 * maxY)]);
     xAxis = (g) => g.call(
         d3.axisBottom(xScale)
             .tickFormat((x) => (x / 1e6).toLocaleString()));
@@ -250,6 +257,12 @@ function chromosomeCoveragePlot(config) {
         .attr("text-anchor", "middle")
         .attr("alignment-baseline", "before-edge")
         .text("Coverage")
+
+    svg.append("clipPath")
+        .attr("id", "plot-area-clip")
+        .append("rect")
+        .attr("height", height - (margin.top + margin.bottom))
+        .attr("width", width - (margin.left + margin.right));
 
     // Calculate cumulative positions to be able to plot all chromosomes
     // side by side.
@@ -294,6 +307,7 @@ function chromosomeCoveragePlot(config) {
     // Coverage
     svg
         .append("g")
+        .attr("clip-path", "url(#plot-area-clip)")
         .attr("transform", `translate(${margin.left},${margin.top})`)
         .selectAll("path")
         .data([cumulativeData.points])
