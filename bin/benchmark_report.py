@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+from datetime import datetime
 import json
 import jinja2
 from pathlib import Path
@@ -34,6 +35,7 @@ def render_template(template, comparisons, coverage, js, css):
         t = jinja2.Template(source=f.read())
 
     return t.render(
+        now=datetime.now(),
         comparisons=comparisons,
         coverage=coverage,
         js=js,

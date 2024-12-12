@@ -10,8 +10,9 @@
         {% endfor %}
     </head>
     <body>
-        <header class="text-6xl mx-4 my-6">
-            <h1>WGS benchmark report</h1>
+        <header class="mx-4 my-6">
+            <h1 class="text-6xl">WGS benchmark report</h1>
+            <small class="text-lg">Report generated at <time>{{ now.strftime("%Y-%m-%d %H:%M:%S") }}</time></small>
         </header>
         <main class="mx-4 my-6">
             <section class="my-16">
