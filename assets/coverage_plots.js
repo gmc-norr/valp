@@ -210,7 +210,14 @@ function chromosomeCoveragePlot(config) {
         return chrMax > acc ? chrMax : acc;
     }, 0);
 
+    let means = data.map((x) => x.mean_coverage);
+    let lengths = data.map((x) => x.length);
+    let mean_sum = means.map((x, i) => x * lengths[i]).reduce((acc, x) => acc + x, 0);
+    let length_sum = lengths.reduce((acc, x) => acc + x);
+    let mean_global_coverage = mean_sum / length_sum;
+
     let descriptionText = `Coverage data across all chromosomes included in the analysis.
+               The mean coverage is ${roundToDecimals(mean_global_coverage, 1).toLocaleString()}.
                Each point represents the average coverage for a ${bin_size.toLocaleString()} bp region.
                Alternating colours denote chromosome boundaries.`;
 
