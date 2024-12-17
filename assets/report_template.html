@@ -189,7 +189,7 @@
                             {% if coverage[comp.id].coverage.regional_coverage | length > 0 %}
                             <select data-id="{{ comp.id }}" class="coverage-region-selector">
                                 {% for region in coverage[comp.id].coverage.regional_coverage %}
-                                <option value="{{ loop.index0 }}">{{ region.name }}</option>
+                                <option value="{{ region.name }}">{{ region.name }}</option>
                                 {% endfor %}
                             </select>
                             <div data-id="{{ comp.id }}" class="regional-coverage">
@@ -197,16 +197,20 @@
                             {% if comp.regional_coverage.fail_regions | length > 0 %}
                             <h5 class="text-lg font-bold my-2">Failed regions</h5>
                             <p>These are regions with a mean coverage lower than the given threshold:</p>
-                            <div>
-                                <p>{{ ", ".join(comp.regional_coverage.fail_regions) }}</p>
-                            </div>
+                            <p class="p-2">
+                            {% for region in comp.regional_coverage.fail_regions %}
+                            <span data-id="{{ comp.id }}" data-region="{{ region }}" class="region-navigation bg-slate-700 hover:bg-slate-400 text-white hover:text-black p-1 rounded cursor-pointer m-1 px-2 py-1">{{ region }}</span>
+                            {% endfor %}
+                            </p>
                             {% endif %}
                             {% if comp.regional_coverage.warn_regions | length > 0 %}
                             <h5 class="text-lg font-bold my-2">Regions with low local coverage</h5>
                             <p>These are regions where the coverage at some point goes below the given threshold:</p>
-                            <div>
-                                <p>{{ ", ".join(comp.regional_coverage.warn_regions) }}</p>
-                            </div>
+                            <p class="p-2">
+                            {% for region in comp.regional_coverage.warn_regions %}
+                            <span data-id="{{ comp.id }}" data-region="{{ region }}" class="region-navigation bg-slate-700 hover:bg-slate-400 text-white hover:text-black p-1 rounded cursor-pointer m-1 px-2 py-1">{{ region }}</span>
+                            {% endfor %}
+                            </p>
                             {% endif %}
                             {% else %}
                             <p>No regional coverage available</p>

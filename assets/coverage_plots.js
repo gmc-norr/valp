@@ -1,9 +1,9 @@
 function all(x, f) {
-    return x.every(f)
+    return x.every(f);
 }
 
 function roundToDecimals(v, d) {
-    return Math.round(10 ** d * v) / 10 ** d
+    return Math.round(10 ** d * v) / 10 ** d;
 }
 
 function showTooltip(evt, message) {
@@ -335,25 +335,31 @@ for (plotData of coverageData) {
         id: plotData.id,
         parent: `#global-coverage-${plotData.id}`,
         data: plotData.coverage.global_coverage,
-    })
+    });
+}
+
+function plotRegionCoverage(id, region) {
+    const d = coverageData.filter((d) => d.id === id)[0].coverage.regional_coverage;
+    const regionData = d.filter((d) => d.name === region)[0];
+    if (regionData === undefined) {
+        throw Error(`no data found for region ${region}`);
+    }
+    regionCoveragePlot({
+        parent: `.regional-coverage[data-id="${id}"]`,
+        data: regionData,
+    });
 }
 
 const coverageSelector = d3.selectAll(".coverage-region-selector");
 coverageSelector.on("change", (evt) => {
-    const regionIndex = +evt.target.value;
     const comparisonId = evt.target.dataset.id;
-    regionCoveragePlot({
-        parent: `.regional-coverage[data-id="${comparisonId}"]`,
-        data: coverageData.filter((d) => d.id === comparisonId)[0].coverage.regional_coverage[regionIndex]
-    });
+    const regionName = evt.target.value;
+    plotRegionCoverage(comparisonId, regionName);
 });
 
 for (cs of coverageSelector) {
-    const regionIndex = +cs.value;
     const comparisonId = cs.dataset.id;
-    regionCoveragePlot({
-        parent: `.regional-coverage[data-id="${comparisonId}"]`,
-        data: coverageData.filter((d) => d.id === comparisonId)[0].coverage.regional_coverage[regionIndex]
-    });
+    const regionName = cs.value;
+    plotRegionCoverage(comparisonId, regionName);
 }
 
