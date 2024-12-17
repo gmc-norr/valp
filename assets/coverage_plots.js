@@ -175,6 +175,7 @@ function regionCoveragePlot(config) {
 }
 
 function chromosomeCoveragePlot(config) {
+    const id = config.id;
     const parent = config.parent ? config.parent : "body";
     const width = config.width ? config.width : 800;
     const height = config.height ? config.height : 200;
@@ -187,12 +188,16 @@ function chromosomeCoveragePlot(config) {
         left: 60,
     };
 
+    if (id === undefined) {
+        throw Error("no id supplied");
+    }
+
     if (data === undefined) {
-        throw Error("no data supplied to CoveragePlot")
+        throw Error("no data supplied to CoveragePlot");
     }
 
     if (!all(data, (d) => d.bin_size === data[0].bin_size)) {
-        throw Error("expected all chromosomes to have the same bin size")
+        throw Error("expected all chromosomes to have the same bin size");
     }
 
     const bin_size = data[0].bin_size;
@@ -266,7 +271,7 @@ function chromosomeCoveragePlot(config) {
         .text("Coverage")
 
     svg.append("clipPath")
-        .attr("id", "plot-area-clip")
+        .attr("id", `plot-area-clip-${id}`)
         .append("rect")
         .attr("height", height - (margin.top + margin.bottom))
         .attr("width", width - (margin.left + margin.right));
@@ -314,7 +319,7 @@ function chromosomeCoveragePlot(config) {
     // Coverage
     svg
         .append("g")
-        .attr("clip-path", "url(#plot-area-clip)")
+        .attr("clip-path", `url(#plot-area-clip-${id})`)
         .attr("transform", `translate(${margin.left},${margin.top})`)
         .selectAll("path")
         .data([cumulativeData.points])
@@ -327,6 +332,7 @@ function chromosomeCoveragePlot(config) {
 
 for (plotData of coverageData) {
     chromosomeCoveragePlot({
+        id: plotData.id,
         parent: `#global-coverage-${plotData.id}`,
         data: plotData.coverage.global_coverage,
     })
