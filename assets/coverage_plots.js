@@ -36,6 +36,7 @@ function regionCoveragePlot(config) {
     const parent = config.parent ? config.parent : "body";
     const width = config.width ? config.width : 800;
     const height = config.height ? config.height : 200;
+    const threshold = config.threshold;
     const data = config.data;
 
     const margin = {
@@ -163,6 +164,35 @@ function regionCoveragePlot(config) {
             (exit) => exit.remove()
         );
 
+    // Threshold
+    if (threshold !== undefined) {
+        svg
+            .selectAll(".threshold-line")
+            .data([threshold])
+            .join("g")
+            .attr("class", "threshold-line")
+            .attr("transform", `translate(${margin.left},${margin.top})`)
+            .selectAll("line")
+            .data((d) => [d])
+            .join(
+                (enter) => enter
+                    .append("line")
+                    .attr("x1", 0)
+                    .attr("x2", width - (margin.left + margin.right))
+                    .attr("y1", (d) => yScale(d))
+                    .attr("y2", (d) => yScale(d))
+                    .attr("stroke", "red")
+                    .attr("stroke-dasharray", "4")
+                    .attr("pointer-events", "none"),
+                (update) => update
+                    .transition()
+                    .duration(300)
+                    .attr("y1", (d) => yScale(d))
+                    .attr("y2", (d) => yScale(d)),
+                (exit) => exit.remove()
+            );
+    }
+
     d3.select(parent)
         .selectAll("p.plot-description")
         .data([1])
@@ -179,6 +209,7 @@ function chromosomeCoveragePlot(config) {
     const parent = config.parent ? config.parent : "body";
     const width = config.width ? config.width : 800;
     const height = config.height ? config.height : 200;
+    const threshold = config.threshold;
     const data = config.data;
     const absoluteMaxY = 100;
     const margin = {
@@ -301,9 +332,10 @@ function chromosomeCoveragePlot(config) {
     svg
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`)
-        .selectAll("chrom-background")
+        .selectAll(".chrom-background")
         .data(cumulativeData.chromosomes)
         .join("rect")
+        .attr("class", "chrom-background")
         .attr("transform", (d) => `translate(${xScale(d.start)},0)`)
         .attr("width", (d) => xScale(d.length))
         .attr("height", height - (margin.top + margin.bottom))
@@ -328,25 +360,46 @@ function chromosomeCoveragePlot(config) {
         .attr("fill", "transparent")
         .attr("stroke", "black")
         .attr("pointer-events", "none");
+
+    // Threshold
+    if (threshold !== undefined) {
+        svg
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`)
+            .selectAll("line")
+            .data([threshold])
+            .join("line")
+            .attr("x1", 0)
+            .attr("x2", width - (margin.left + margin.right))
+            .attr("y1", (d) => yScale(d))
+            .attr("y2", (d) => yScale(d))
+            .attr("stroke", "red")
+            .attr("stroke-dasharray", "4")
+            .attr("pointer-events", "none");
+    }
 }
 
 for (plotData of coverageData) {
+    const coverageThreshold = thresholds.filter((d) => d.name === "Coverage")[0].value;
     chromosomeCoveragePlot({
         id: plotData.id,
         parent: `#global-coverage-${plotData.id}`,
         data: plotData.coverage.global_coverage,
+        threshold: coverageThreshold,
     });
 }
 
 function plotRegionCoverage(id, region) {
     const d = coverageData.filter((d) => d.id === id)[0].coverage.regional_coverage;
     const regionData = d.filter((d) => d.name === region)[0];
+    const coverageThreshold = thresholds.filter((d) => d.name === "Coverage")[0].value;
     if (regionData === undefined) {
         throw Error(`no data found for region ${region}`);
     }
     regionCoveragePlot({
         parent: `.regional-coverage[data-id="${id}"]`,
         data: regionData,
+        threshold: coverageThreshold,
     });
 }
 
