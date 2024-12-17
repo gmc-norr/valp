@@ -30,7 +30,7 @@ def files_to_strings(filenames):
     return file_contents
 
 
-def render_template(template, comparisons, coverage, js, css):
+def render_template(template, comparisons, coverage, thresholds, js, css):
     with open(template) as f:
         t = jinja2.Template(source=f.read())
 
@@ -38,6 +38,7 @@ def render_template(template, comparisons, coverage, js, css):
         now=datetime.now(),
         comparisons=comparisons,
         coverage=coverage,
+        thresholds=thresholds,
         js=js,
         css=css,
     )
@@ -156,10 +157,34 @@ def main(
         )
         comparisons.append(comp)
 
+    thresholds = [
+        {
+            "name": "Coverage",
+            "value": coverage_th,
+        },
+        {
+            "name": "SNV precision",
+            "value": snv_precision_th,
+        },
+        {
+            "name": "SNV recall",
+            "value": snv_recall_th,
+        },
+        {
+            "name": "INDEL precision",
+            "value": indel_precision_th,
+        },
+        {
+            "name": "INDEL recall",
+            "value": indel_recall_th,
+        },
+    ]
+
     report = render_template(
         template,
         dict((c["id"], c) for c in sorted(comparisons, key=lambda x: x["id"])),
         dict((c["id"], c) for c in sorted(coverage_results, key=lambda x: x["id"])),
+        thresholds,
         files_to_strings(javascript) if javascript else None,
         files_to_strings(css) if css else None,
     )
