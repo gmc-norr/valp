@@ -15,108 +15,210 @@
             <small class="text-lg">Report generated at <time>{{ now.strftime("%Y-%m-%d %H:%M:%S") }}</time></small>
         </header>
         <main class="mx-4 my-6">
-            <section class="my-16">
-                <h2 class="text-4xl my-8">Comparisons</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 m-4">
-                {% for comp_id, comp in comparisons.items() %}
-                    <div class="comparison-info flex justify-around gap-4 items-center bg-gray-100 hover:bg-blue-200 px-6 py-3" data-id="{{ comp.id }}" >
-                        <div class="text-4xl text-center"><p>{{ comp.id }}</p></div>
-                        <table display="block">
+            <h2 class="text-4xl my-8">Comparisons</h2>
+            <div class="flex flex-col">
+            {% for comp_id, comp in comparisons.items() %}
+                <details class="block rounded bg-slate-200 m-4 p-4">
+                    <summary class="flex flex-row gap-8 cursor-pointer">
+                        <h2 class="block grow self-center text-4xl">{{ comp.id }} &mdash; {{ comp.queryset_name }} vs {{ comp.truthset_name }} ({{ comp.genome }})</h2>
+                        <div>
+                            <div class="text-center">
+                                <span>Coverage</span>
+                            </div>
+                            <div class="flex gap-4 justify-around">
+                                <span>Global</span>
+                                <span>Regional</span>
+                            </div>
+                            <div class="flex gap-4 justify-around">
+                                <span title="Mean coverage of included chromosomes">
+                                    {% if not comp.global_coverage.mean_coverage %}
+                                    &ndash;
+                                    {% else %}
+                                    {{ "%.1f"|format(comp.global_coverage.mean_coverage) }}
+                                    {% endif %}
+                                    {% if comp.global_coverage.state == "pass" %}
+                                    ✔ 
+                                    {% elif comp.global_coverage.state == "warn" %}
+                                    ⚠
+                                    {% elif comp.global_coverage.state == "fail" %}
+                                    ❌
+                                    {% endif %}
+                                </span>
+                                <span title="Mean coverage across specified regions">
+                                    {% if not comp.regional_coverage.mean_coverage %}
+                                    &ndash;
+                                    {% else %}
+                                    {{ "%.1f"|format(comp.regional_coverage.mean_coverage) }}
+                                    {% endif %}
+                                    {% if comp.regional_coverage.state == "pass" %}
+                                    ✔ 
+                                    {% elif comp.regional_coverage.state == "warn" %}
+                                    ⚠
+                                    {% elif comp.regional_coverage.state == "fail" %}
+                                    ❌
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-center">
+                                <span>SNV</span>
+                            </div>
+                            <div>
+                                <span>Precision</span>
+                                <span>Recall</span>
+                            </div>
+                            <div class="flex gap-4 justify-around">
+                                <span>
+                                    {% if comp.snv_precision %}
+                                    {{ "%.2f"|format(comp.snv_precision.value) }}
+                                        {% if comp.snv_precision.state == "pass" %}
+                                        ✔
+                                        {% elif comp.snv_precision.state == "fail" %}
+                                        ❌
+                                        {% endif %}
+                                    {% else %}
+                                    &ndash;
+                                    {% endif %}
+                                </span>
+                                <span>
+                                    {% if comp.snv_recall %}
+                                    {{ "%.2f"|format(comp.snv_recall.value) }}
+                                        {% if comp.snv_recall.state == "pass" %}
+                                        ✔
+                                        {% elif comp.snv_recall.state == "fail" %}
+                                        ❌
+                                        {% endif %}
+                                    {% else %}
+                                    &ndash;
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-center">
+                                <span>INDEL</span>
+                            </div>
+                            <div>
+                                <span>Precision</span>
+                                <span>Recall</span>
+                            </div>
+                            <div class="flex gap-4 justify-around">
+                                <span>
+                                    {% if comp.indel_precision %}
+                                    {{ "%.2f"|format(comp.indel_precision.value) }}
+                                        {% if comp.indel_precision.state == "pass" %}
+                                        ✔
+                                        {% elif comp.indel_precision.state == "fail" %}
+                                        ❌
+                                        {% endif %}
+                                    {% else %}
+                                    &ndash;
+                                    {% endif %}
+                                </span>
+                                <span>
+                                    {% if comp.indel_recall %}
+                                    {{ "%.2f"|format(comp.indel_recall.value) }}
+                                        {% if comp.indel_recall.state == "pass" %}
+                                        ✔
+                                        {% elif comp.indel_recall.state == "fail" %}
+                                        ❌
+                                        {% endif %}
+                                    {% else %}
+                                    &ndash;
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </summary>
+
+                    <div class="my-6">
+                        <h3 class="text-2xl my-4">Overview</h3>
+                        <table>
                             <tr>
-                                <th class="text-right pr-2">Truth set</th>
-                                <td>{{ comp.truthset_name }}</td>
+                                <th class="text-right pr-2">Truth set:</th>
+                                <td class="text-left">{{ comp.truthset_name }} ({{ comp.original_truth_genome }})</td>
                             </tr>
                             <tr>
-                                <th class="text-right pr-2">Query set</th>
-                                <td>{{ comp.queryset_name }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-right pr-2">Genome used for comparison</th>
-                                <td>{{ comp.genome }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-right pr-2">Truth set original genome</th>
-                                <td>{{ comp.original_truth_genome }}</td>
+                                <th class="text-right pr-2">Query set:</th>
+                                <td class="text-left">{{ comp.queryset_name }} ({{ comp.genome }})</td>
                             </tr>
                         </table>
                     </div>
-                {% endfor %}
-                </div>
-            </section>
 
-            <section class="my-16">
-                <h2 class="text-4xl my-8">hap.py summary</h2>
-                {#<select>
-                    {% for name in comparisons[0].happy_summary.column_names %}
-                    <option>{{ name }}</option>
-                    {% endfor %}
-                </select>#}
-                <div class="overflow-auto">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                {% set comp = comparisons.values() | first %}
-                                {% for name in comp.happy_summary.column_names %}
-                                <th>{{ name }}</th>
+                    <div class="overflow-auto my-6">
+                        <h3 class="text-2xl my-4">hap.py summary</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    {% for name in comp.happy_summary.column_names %}
+                                    <th>{{ name }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in comp.happy_summary.rows %}
+                                <tr data-id="{{ comp.id }}" class="hover:bg-blue-200">
+                                    <td>{{ comp.id }}</td>
+                                    {% for key in comp.happy_summary.column_names %}
+                                        {% if row[key] is float %}
+                                        <td class="text-right">{{ "{0:,.2f}".format(row[key]) }}</td>
+                                        {% elif row[key] is integer %}
+                                        <td class="text-right">{{ "{0:,d}".format(row[key]) }}</td>
+                                        {% else %}
+                                        <td>{{ row[key] }}</td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
                                 {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for comp in comparisons.values() %}
-                            {% for row in comp.happy_summary.rows %}
-                            <tr data-id="{{ comp.id }}" class="hover:bg-blue-200">
-                                <td>{{ comp.id }}</td>
-                                {% for key in comp.happy_summary.column_names %}
-                                    {% if row[key] is float %}
-                                    <td class="text-right">{{ "{0:,.2f}".format(row[key]) }}</td>
-                                    {% elif row[key] is integer %}
-                                    <td class="text-right">{{ "{0:,d}".format(row[key]) }}</td>
-                                    {% else %}
-                                    <td>{{ row[key] }}</td>
-                                    {% endif %}
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <section class="my-16">
-                <h2 class="text-4xl my-8">Coverage</h2>
-                {% for comp in comparisons.values() %}
-                <div>
-                    <h3 class="text-2xl my-6">{{ comp.id }} &ndash; {{ comp.queryset_name }}</h3>
-                    {% if comp.id not in coverage %}
-                    <p>No coverage data avaliable.</p>
-                    {% else %}
-                    <div id="global-coverage-{{ comp.id }}">
-                        <h4 class="text-xl my-4">Global coverage</h4>
-                        <p class="plot-description">There is data here!</p>
+                            </tbody>
+                        </table>
                     </div>
-                    <div id="regional-coverage-{{ comp.id }}">
-                        <h4 class="text-xl my-4">Regional coverage</h4>
-                        {% if coverage[comp.id].coverage.regional_coverage | length > 0 %}
-                        <select data-id="{{ comp.id }}" class="coverage-region-selector">
-                            {% for region in coverage[comp.id].coverage.regional_coverage %}
-                            <option value="{{ loop.index0 }}">{{ region.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <div data-id="{{ comp.id }}" class="regional-coverage">
-                        </div>
+                    <div class="my-6">
+                        <h3 class="text-2xl my-4">Coverage</h3>
+                        {% if comp.id not in coverage %}
+                        <p>No coverage data avaliable.</p>
                         {% else %}
-                        <p>No regional coverage available</p>
+                        <div id="global-coverage-{{ comp.id }}">
+                            <h4 class="text-xl my-4">Global coverage</h4>
+                            <p class="plot-description">There is data here!</p>
+                        </div>
+                        <div id="regional-coverage-{{ comp.id }}">
+                            <h4 class="text-xl my-4">Regional coverage</h4>
+                            {% if coverage[comp.id].coverage.regional_coverage | length > 0 %}
+                            <select data-id="{{ comp.id }}" class="coverage-region-selector">
+                                {% for region in coverage[comp.id].coverage.regional_coverage %}
+                                <option value="{{ loop.index0 }}">{{ region.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div data-id="{{ comp.id }}" class="regional-coverage">
+                            </div>
+                            {% if comp.regional_coverage.fail_regions | length > 0 %}
+                            <h5 class="text-lg font-bold my-2">Failed regions</h5>
+                            <p>These are regions with a mean coverage lower than the given threshold:</p>
+                            <div>
+                                <p>{{ ", ".join(comp.regional_coverage.fail_regions) }}</p>
+                            </div>
+                            {% endif %}
+                            {% if comp.regional_coverage.warn_regions | length > 0 %}
+                            <h5 class="text-lg font-bold my-2">Regions with low local coverage</h5>
+                            <p>These are regions where the coverage at some point goes below the given threshold:</p>
+                            <div>
+                                <p>{{ ", ".join(comp.regional_coverage.warn_regions) }}</p>
+                            </div>
+                            {% endif %}
+                            {% else %}
+                            <p>No regional coverage available</p>
+                            {% endif %}
+                        </div>
                         {% endif %}
                     </div>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </section>
+                </details>
+            {% endfor %}
+            </div>
         </main>
         <script>
-            const jsonData = {{ comparisons.values() | list | tojson }};
             const coverageData = {{ coverage.values() | list | tojson }};
         </script>
         {% for script in js %}

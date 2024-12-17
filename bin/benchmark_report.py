@@ -43,14 +43,98 @@ def render_template(template, comparisons, coverage, js, css):
     )
 
 
+def call_metric(hsum, metric, th=0.9, var_type="snp"):
+    for row in hsum.get("rows", []):
+        if row.get("type", "").lower() == var_type and row.get("filter", "").lower() == "pass":
+            m = row.get(f"metric.{metric}")
+            state = "pass"
+            if m < th:
+                state = "fail"
+            return {"value": m, "state": state}
+    return None
+
+
+def coverage_state(coverage_data, comp_id, th=30, cov_type="global"):
+    for comp in coverage_data:
+        if comp["id"] != comp_id:
+            continue
+
+        if cov_type == "global":
+            means = []
+            lengths = []
+            state = "pass"
+
+            for seq in comp["coverage"]["global_coverage"]:
+                seq_mean = seq["mean_coverage"]
+                if seq_mean < th:
+                    state = "warn"
+                means.append(seq_mean)
+                lengths.append(seq["length"])
+
+            mean_cov = sum(x * y for x, y in zip(means, lengths)) / sum(lengths)
+
+            if mean_cov < th:
+                state = "fail"
+            return {"mean_coverage": mean_cov, "state": state}
+
+        if cov_type == "regional":
+            fail_regions = []
+            warn_regions = []
+            means = []
+            lengths = []
+            state = "pass"
+
+            for seq in comp["coverage"]["regional_coverage"]:
+                seq_mean = seq["mean_coverage"]
+                region_state = None
+                if seq_mean < th:
+                    fail_regions.append(seq["name"])
+                    region_state = "fail"
+                    state = "fail"
+                if region_state != "fail" and any(x < th for x in seq["coverage"]):
+                    warn_regions.append(seq["name"])
+                    state = "warn"
+                means.append(seq_mean)
+                lengths.append(seq["length"])
+
+            mean_cov = sum(x * y for x, y in zip(means, lengths)) / sum(lengths)
+
+            if mean_cov < th:
+                state = "fail"
+            return {
+                "mean_coverage": mean_cov,
+                "state": state,
+                "fail_regions": fail_regions,
+                "warn_regions": warn_regions,
+            }
+
+
 def main(
     template: Union[str, Path],
     javascript: Optional[List[Union[str, Path]]],
     css: Optional[List[Union[str, Path]]],
     happy_csv: List[Union[str, Path]],
     coverage_csv: Optional[Union[str, Path]],
+    coverage_th: int,
+    snv_precision_th: float,
+    snv_recall_th: float,
+    indel_precision_th: float,
+    indel_recall_th: float,
     output: Optional[Union[str, Path]],
 ):
+    coverage_results = []
+    if coverage_csv is not None:
+        for line in read_csv(coverage_csv):
+            coverage_data = read_json(line["json"])
+            coverage_results.append(
+                dict(
+                    id=line["id"],
+                    sample=line["sample"],
+                    genome=line["genome"],
+                    coverage=coverage_data,
+                )
+            )
+
     happy_results = read_csv(happy_csv)
     comparisons = []
     for comp in happy_results:
@@ -58,19 +142,19 @@ def main(
         hext = read_json(comp["happy_extended"])
         comp["happy_summary"] = hsum
         comp["happy_extended"] = hext
+        comp["snv_precision"] = call_metric(hsum, "precision", th=snv_precision_th, var_type="snp")
+        comp["snv_recall"] = call_metric(hsum, "recall", th=snv_recall_th, var_type="snp")
+        comp["indel_precision"] = call_metric(
+            hsum, "precision", th=indel_precision_th, var_type="indel"
+        )
+        comp["indel_recall"] = call_metric(hsum, "recall", th=indel_recall_th, var_type="indel")
+        comp["global_coverage"] = coverage_state(
+            coverage_results, comp["id"], th=coverage_th, cov_type="global"
+        )
+        comp["regional_coverage"] = coverage_state(
+            coverage_results, comp["id"], th=coverage_th, cov_type="regional"
+        )
         comparisons.append(comp)
-
-    coverage_results = []
-    if coverage_csv is not None:
-        for line in read_csv(coverage_csv):
-            coverage_results.append(
-                dict(
-                    id=line["id"],
-                    sample=line["sample"],
-                    genome=line["genome"],
-                    coverage=read_json(line["json"]),
-                )
-            )
 
     report = render_template(
         template,
@@ -126,6 +210,41 @@ if __name__ == "__main__":
         nargs="+",
     )
     parser.add_argument(
+        "--coverage-threshold",
+        dest="coverage_th",
+        default=30,
+        help="Minimum mean coverage threshold value.",
+        type=int,
+    )
+    parser.add_argument(
+        "--snv-precision-threshold",
+        dest="snv_precision_th",
+        default=0.9,
+        help="SNV precision threshold value.",
+        type=float,
+    )
+    parser.add_argument(
+        "--snv-recall-threshold",
+        dest="snv_recall_th",
+        default=0.9,
+        help="SNV recall threshold value.",
+        type=float,
+    )
+    parser.add_argument(
+        "--indel-precision-threshold",
+        dest="indel_precision_th",
+        default=0.9,
+        help="INDEL precision threshold value.",
+        type=float,
+    )
+    parser.add_argument(
+        "--indel-recall-threshold",
+        dest="indel_recall_th",
+        default=0.9,
+        help="INDEL recall threshold value.",
+        type=float,
+    )
+    parser.add_argument(
         "-o",
         "--output",
         default=None,
@@ -134,4 +253,16 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    main(args.template, args.js, args.css, args.happy_csv, args.coverage_csv, args.output)
+    main(
+        args.template,
+        args.js,
+        args.css,
+        args.happy_csv,
+        args.coverage_csv,
+        args.coverage_th,
+        args.snv_precision_th,
+        args.snv_recall_th,
+        args.indel_precision_th,
+        args.indel_recall_th,
+        args.output,
+    )
