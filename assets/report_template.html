@@ -20,8 +20,18 @@
             {% for comp_id, comp in comparisons.items() %}
                 <details class="block rounded bg-slate-200 m-4 p-4">
                     <summary class="flex flex-row gap-8 cursor-pointer">
-                        <h2 class="block grow self-center text-4xl">{{ comp.id }} &mdash; {{ comp.queryset_name }} vs {{ comp.truthset_name }} ({{ comp.genome }})</h2>
-                        <div>
+                        <h3 class="flex grow shrink-0 self-center">
+                            <div>
+                                <span class="block text-4xl">{{ comp.queryset_name }}</span>
+                                <small class="block">{{ comp.genome }}</small>
+                            </div>
+                            <span class="block text-4xl mx-4">vs</span>
+                            <div>
+                                <span class="block text-4xl">{{ comp.truthset_name }}</span>
+                                <small class="block">{{ comp.original_truth_genome }}</small>
+                            </div>
+                        </h3>
+                        <div class="shrink-0">
                             <div class="text-center">
                                 <span>Coverage</span>
                             </div>
@@ -60,7 +70,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div>
+                        <div class="shrink-0">
                             <div class="text-center">
                                 <span>SNV</span>
                             </div>
@@ -95,7 +105,7 @@
                                 </span>
                             </div>
                         </div>
-                        <div>
+                        <div class="shrink-0">
                             <div class="text-center">
                                 <span>INDEL</span>
                             </div>

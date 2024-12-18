@@ -665,6 +665,10 @@ video {
   max-width: 1536px;
 }
 
+.shrink-0 {
+  flex-shrink: 0;
+}
+
 .grow {
   flex-grow: 1;
 }
