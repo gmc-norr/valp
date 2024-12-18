@@ -61,6 +61,7 @@ function regionCoveragePlot(config) {
         .selectAll("svg")
         .data([data])
         .join("svg")
+        .attr("class", "block w-full max-w-screen-2xl h-full grow mb-6")
         .attr("preserveAspectRatio", "xMinYMin meet")
         .attr("viewBox", [0, 0, width, height])
         .attr("width", width)
@@ -235,6 +236,7 @@ function chromosomeCoveragePlot(config) {
 
     const svg = d3.select(parent)
         .append("svg")
+        .attr("class", "block w-full max-w-screen-2xl h-full grow mb-6")
         .attr("preserveAspectRatio", "xMinYMin meet")
         .attr("viewBox", [0, 0, width, height])
         .attr("width", width)
