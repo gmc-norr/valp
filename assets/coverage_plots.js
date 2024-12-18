@@ -23,7 +23,8 @@ function showTooltip(evt, message) {
                 .html(message),
             update => update
                 .style("top", `${y + 20}px`)
-                .style("left", `${x}px`),
+                .style("left", `${x}px`)
+                .html(message),
             exit => exit.remove()
         );
 }
@@ -268,16 +269,16 @@ function chromosomeCoveragePlot(config) {
         .select("p.plot-description")
         .text(descriptionText);
 
-    xScale = d3.scaleLinear()
+    const xScale = d3.scaleLinear()
         .range([0, width - (margin.left + margin.right)])
         .domain([0, maxX]);
-    yScale = d3.scaleLinear()
+    const yScale = d3.scaleLinear()
         .range([height - (margin.bottom + margin.top), 0])
         .domain([0, Math.min(absoluteMaxY, 1.1 * maxY)]);
-    xAxis = (g) => g.call(
+    const xAxis = (g) => g.call(
         d3.axisBottom(xScale)
             .tickFormat((x) => (x / 1e6).toLocaleString()));
-    yAxis = (g) => g.call(d3.axisLeft(yScale));
+    const yAxis = (g) => g.call(d3.axisLeft(yScale));
 
     svg
         .append("g")
@@ -309,6 +310,16 @@ function chromosomeCoveragePlot(config) {
         .attr("height", height - (margin.top + margin.bottom))
         .attr("width", width - (margin.left + margin.right));
 
+    // Where chromosome backgrounds should be drawn
+    const background = svg
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Where all the plotting should happen
+    const plotArea = svg
+        .append("g") .attr("clip-path", `url(#plot-area-clip-${id})`)
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
     // Calculate cumulative positions to be able to plot all chromosomes
     // side by side.
     let cumulativeData = data.reduce((acc, d) => {
@@ -330,10 +341,28 @@ function chromosomeCoveragePlot(config) {
         }
     }, { cumulativeLength: 0, chromosomes: [], points: [] });
 
+    function updateMouseMarker(d) {
+        plotArea
+            .selectAll(".mouse-marker")
+            .data([d])
+            .join("circle")
+            .attr("class", "mouse-marker")
+            .attr("cx", (d) => xScale(d.x))
+            .attr("cy", (d) => yScale(d.y))
+            .attr("r", 3)
+            .attr("stroke", "black")
+            .attr("fill", "firebrick")
+            .attr("pointer-events", "none");
+    }
+
+    function hideMouseMarker() {
+        plotArea.selectAll(".mouse-marker").remove();
+    }
+
+    const bisector = d3.bisector((d) => d.x)
+
     // Chromosome backgrounds
-    svg
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`)
+    background
         .selectAll(".chrom-background")
         .data(cumulativeData.chromosomes)
         .join("rect")
@@ -345,16 +374,21 @@ function chromosomeCoveragePlot(config) {
         .attr("opacity", 0.5)
         .on("mouseenter mousemove", (evt, data) => {
             evt.preventDefault();
-            const message = `${data.name}<br>mean cov: ${roundToDecimals(data.meanCoverage, 2)}`;
+            const mouseX = d3.pointer(evt, evt.currentTarget.parentElement)[0];
+            const xPos = xScale.invert(mouseX);
+            const idx = bisector.center(cumulativeData.points, xPos)
+            const p = cumulativeData.points[idx];
+            const message = `${data.name}<br>mean cov: ${roundToDecimals(data.meanCoverage, 2)}<br>cov: ${roundToDecimals(p.y, 2).toLocaleString()}`;
             showTooltip(evt, message);
+            updateMouseMarker(p);
         })
-        .on("mouseleave", hideTooltip);
+        .on("mouseleave", () => {
+            hideTooltip();
+            hideMouseMarker();
+        });
 
     // Coverage
-    svg
-        .append("g")
-        .attr("clip-path", `url(#plot-area-clip-${id})`)
-        .attr("transform", `translate(${margin.left},${margin.top})`)
+    plotArea
         .selectAll("path")
         .data([cumulativeData.points])
         .join("path")
