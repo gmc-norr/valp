@@ -52,7 +52,6 @@ function regionCoveragePlot(config) {
     }
 
     const binSize = data.bin_size;
-    const chromosome = data.chromosome;
 
     const minX = data.start;
     const maxX = data.end;
@@ -68,16 +67,27 @@ function regionCoveragePlot(config) {
         .attr("width", width)
         .attr("height", height);
 
-    xScale = d3.scaleLinear()
+    const plotArea = svg
+        .selectAll(".plot-area")
+        .data((d) => {
+            return [d.coverage.map((d, i) => {
+                return {x: minX + i * binSize, y: d};
+            })];
+        })
+        .join("g")
+        .classed("plot-area", true)
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const xScale = d3.scaleLinear()
         .range([0, width - (margin.left + margin.right)])
         .domain([minX, maxX]);
-    yScale = d3.scaleLinear()
+    const yScale = d3.scaleLinear()
         .range([height - (margin.bottom + margin.top), 0])
         .domain([0, maxY]);
-    xAxis = (g) => g.call(
+    const xAxis = (g) => g.call(
         d3.axisBottom(xScale)
             .tickFormat((x) => (x / 1e6).toLocaleString()));
-    yAxis = (g) => g.call(d3.axisLeft(yScale).ticks(5));
+    const yAxis = (g) => g.call(d3.axisLeft(yScale).ticks(5));
 
     const lineGenerator = d3.line()
         .x((d) => xScale(d.x))
@@ -137,18 +147,58 @@ function regionCoveragePlot(config) {
         .attr("alignment-baseline", "before-edge")
         .text("Coverage");
 
-    svg
-        .selectAll(".plot-area")
-        .data((d) => [d])
-        .join("g")
-        .classed("plot-area", true)
-        .attr("transform", `translate(${margin.left},${margin.top})`)
-        .selectAll("path")
-        .data((d) => {
-            return [d.coverage.map((d, i) => {
-                return {x: minX + i * binSize, y: d};
-            })];
+    function updateMouseMarker(d) {
+        plotArea
+            .selectAll(".mouse-marker")
+            .data([d])
+            .join("circle")
+            .attr("class", "mouse-marker")
+            .attr("cx", (d) => xScale(d.x))
+            .attr("cy", (d) => yScale(d.y))
+            .attr("r", 3)
+            .attr("stroke", "black")
+            .attr("fill", "firebrick")
+            .attr("pointer-events", "none");
+    }
+
+    function hideMouseMarker() {
+        plotArea.selectAll(".mouse-marker").remove();
+    }
+
+    const bisector = d3.bisector((d) => d.x);
+
+    // Add a background
+    plotArea
+        .selectAll("rect")
+        .data([1])
+        .join("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", width - (margin.left + margin.right))
+        .attr("height", height - (margin.top + margin.bottom))
+        .attr("fill", "white");
+
+    plotArea
+        .on("mouseenter mousemove", (evt, d) => {
+            evt.preventDefault();
+            const mouseX = d3.pointer(evt)[0];
+            const xPos = xScale.invert(mouseX);
+            const idx = bisector.center(d, xPos)
+            const p = d[idx];
+            const message = `cov: ${roundToDecimals(p.y, 2).toLocaleString()}`;
+            showTooltip(evt, message);
+            updateMouseMarker(p);
         })
+
+    plotArea
+        .on("mouseleave", () => {
+            hideTooltip();
+            hideMouseMarker();
+        })
+
+    plotArea
+        .selectAll("path")
+        .data((d) => [d])
         .join(
             (enter) => enter
                 .append("path")
@@ -204,6 +254,8 @@ function regionCoveragePlot(config) {
                The average coverage is ${roundToDecimals(data.mean_coverage, 1).toLocaleString()} over
                ${data.length.toLocaleString()} bp.`)
 
+    hideTooltip();
+    hideMouseMarker();
 }
 
 function chromosomeCoveragePlot(config) {
