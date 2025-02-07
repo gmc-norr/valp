@@ -18,6 +18,7 @@ process BCFTOOLS_PLUGINLIFTOVER {
     script:
     def plugin_path = task.ext.plugin_path ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+    def extra = task.ext.extra ?: ""
     
     """
     bcftools +${plugin_path} \
@@ -30,6 +31,7 @@ process BCFTOOLS_PLUGINLIFTOVER {
         -c ${chain_file} \
         -Oz \
         --write-reject \
-        --reject ${prefix}.rejected.vcf.gz
+        --reject ${prefix}.rejected.vcf.gz \
+        ${extra}
     """
 }
