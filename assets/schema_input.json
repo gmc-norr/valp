@@ -19,9 +19,8 @@
                 "format": "file-path"
             },
             "truthset_genome": {
-                "description": "Genome version of the truth set",
+                "description": "Genome version of the truth set. Has to be defined as a key in params.references.",
                 "type": "string",
-                "enum": ["GRCh37", "GRCh38"],
                 "default": "GRCh38"
             },
             "queryset_name": {
