@@ -14,8 +14,8 @@ workflow SMALL_VARIANT_BENCHMARK {
         .map { meta, query, truth -> [[id: meta.id, genome: meta.genome], meta, query, truth] }
         .join(regions)
         .join(target)
-        .map { meta1, meta2, query, truth, regions, target ->
-            [meta2, query, truth, regions, target]
+        .map { _meta1, meta2, query, truth, reg_bed, tgt_bed ->
+            [meta2, query, truth, reg_bed, tgt_bed]
         }
         .set { ch_comparison_input }
 
