@@ -55,7 +55,14 @@ def call_metric(hsum, metric, th=0.9, var_type="snp"):
     return None
 
 
-def coverage_state(coverage_data, comp_id, th=30, cov_type="global"):
+def coverage_state(
+    coverage_data,
+    comp_id,
+    th: int = 30,
+    cov_type: str = "global",
+    warn_th: int = 25,
+    warn_fraction: float = 0.25,
+):
     for comp in coverage_data:
         if comp["id"] != comp_id:
             continue
@@ -66,11 +73,28 @@ def coverage_state(coverage_data, comp_id, th=30, cov_type="global"):
             state = "pass"
 
             for seq in comp["coverage"]["global_coverage"]:
+                if seq["name"] in ("X", "Y", "chrX", "chrY"):
+                    continue
                 seq_mean = seq["mean_coverage"]
-                if seq_mean < th:
-                    state = "warn"
                 means.append(seq_mean)
                 lengths.append(seq["length"])
+
+                # Only do the coming check if necessary
+                if state == "warn":
+                    continue
+
+                # Scan the genome and issue a warning if the coverage is under the threshold.
+                window_size = round(seq["length"] * warn_fraction) // seq["bin_size"]
+                i = 0
+                while i < len(seq["coverage"]) - window_size:
+                    window = [x for x in seq["coverage"][i : i + window_size] if x > 0]
+                    window_mean = sum(window) / len(window)
+                    if window_mean < warn_th:
+                        state = "warn"
+                        break
+                    i += 1
+
+            assert len(means) == len(lengths)
 
             mean_cov = sum(x * y for x, y in zip(means, lengths)) / sum(lengths)
 
@@ -85,6 +109,14 @@ def coverage_state(coverage_data, comp_id, th=30, cov_type="global"):
             lengths = []
             state = "pass"
 
+            if len(comp["coverage"]["regional_coverage"]) == 0:
+                return {
+                    "mean_coverage": None,
+                    "state": None,
+                    "fail_regions": [],
+                    "warn_regions": [],
+                }
+
             for seq in comp["coverage"]["regional_coverage"]:
                 seq_mean = seq["mean_coverage"]
                 region_state = None
@@ -98,10 +130,13 @@ def coverage_state(coverage_data, comp_id, th=30, cov_type="global"):
                 means.append(seq_mean)
                 lengths.append(seq["length"])
 
+            assert len(means) == len(lengths)
+
             mean_cov = sum(x * y for x, y in zip(means, lengths)) / sum(lengths)
 
             if mean_cov < th:
                 state = "fail"
+
             return {
                 "mean_coverage": mean_cov,
                 "state": state,
@@ -117,6 +152,8 @@ def main(
     happy_csv: List[Union[str, Path]],
     coverage_csv: Optional[Union[str, Path]],
     coverage_th: int,
+    coverage_warn_th: int,
+    coverage_warn_fraction: float,
     snv_precision_th: float,
     snv_recall_th: float,
     indel_precision_th: float,
@@ -150,7 +187,12 @@ def main(
         )
         comp["indel_recall"] = call_metric(hsum, "recall", th=indel_recall_th, var_type="indel")
         comp["global_coverage"] = coverage_state(
-            coverage_results, comp["id"], th=coverage_th, cov_type="global"
+            coverage_results,
+            comp["id"],
+            th=coverage_th,
+            cov_type="global",
+            warn_th=coverage_warn_th,
+            warn_fraction=coverage_warn_fraction,
         )
         comp["regional_coverage"] = coverage_state(
             coverage_results, comp["id"], th=coverage_th, cov_type="regional"
@@ -242,6 +284,20 @@ if __name__ == "__main__":
         type=int,
     )
     parser.add_argument(
+        "--coverage-warning",
+        dest="coverage_warn_th",
+        default=25,
+        help="Minimum chromosomal fractional coverage that needs to be exceeded to not issue a warning.",
+        type=int,
+    )
+    parser.add_argument(
+        "--coverage-warning-fraction",
+        dest="coverage_warn_fraction",
+        default=0.25,
+        help="Fraction of each chromosome that need to exceed `--coverage-warning` to not issue a warning.",
+        type=float,
+    )
+    parser.add_argument(
         "--snv-precision-threshold",
         dest="snv_precision_th",
         default=0.9,
@@ -285,6 +341,8 @@ if __name__ == "__main__":
         args.happy_csv,
         args.coverage_csv,
         args.coverage_th,
+        args.coverage_warn_th,
+        args.coverage_warn_fraction,
         args.snv_precision_th,
         args.snv_recall_th,
         args.indel_precision_th,

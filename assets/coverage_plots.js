@@ -308,7 +308,7 @@ function chromosomeCoveragePlot(config) {
     let mean_global_coverage = mean_sum / length_sum;
 
     let descriptionText = `Coverage data across all chromosomes included in the analysis.
-               The mean coverage is ${roundToDecimals(mean_global_coverage, 1).toLocaleString()}.
+               The mean autosomal coverage is ${roundToDecimals(mean_global_coverage, 1).toLocaleString()}.
                Each point represents the average coverage for a ${bin_size.toLocaleString()} bp region.
                Alternating colours denote chromosome boundaries.`;
 
