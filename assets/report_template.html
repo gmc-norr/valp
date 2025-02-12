@@ -161,9 +161,9 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th class="px-2">ID</th>
                                     {% for name in comp.happy_summary.column_names %}
-                                    <th>{{ name }}</th>
+                                    <th class="px-2">{{ comp.happy_summary.column_labels[name] }}</th>
                                     {% endfor %}
                                 </tr>
                             </thead>

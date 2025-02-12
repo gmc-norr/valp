@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 import jinja2
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 
 def read_json(filename: Union[str, Path]) -> Dict[str, Any]:
@@ -145,6 +145,14 @@ def coverage_state(
             }
 
 
+def add_happy_labels(d: Dict, names: Dict[str, str]):
+    old_names = d["column_names"]
+    labels = dict((x, names.get(x, x)) for x in old_names)
+    d["column_labels"] = labels
+    print(d)
+    return d
+
+
 def main(
     template: Union[str, Path],
     javascript: Optional[List[Union[str, Path]]],
@@ -178,7 +186,26 @@ def main(
     for comp in happy_results:
         hsum = read_json(comp["happy_summary"])
         hext = read_json(comp["happy_extended"])
-        comp["happy_summary"] = hsum
+        comp["happy_summary"] = add_happy_labels(hsum, names={
+            "type": "Type",
+            "filter": "Filter",
+            "truth.total": "Truth count",
+            "truth.tp": "Truth TP",
+            "truth.fn": "Truth FN",
+            "query.total": "Query count",
+            "query.fp": "Query FP",
+            "query.unk": "Query UNK",
+            "fp.gt": "FP GT",
+            "fp.al": "FP AL",
+            "metric.recall": "Recall",
+            "metric.precision": "Precision",
+            "metric.frac_na": "Frac NA",
+            "metric.f1_score": "F1 score",
+            "truth.total.titv_ratio": "Truth ti/tv",
+            "query.total.titv_ratio": "Query ti/tv",
+            "truth.total.het_hom_ratio": "Truth het/hom ratio",
+            "query.total.het_hom_ratio": "Query het/hom ratio",
+        })
         comp["happy_extended"] = hext
         comp["snv_precision"] = call_metric(hsum, "precision", th=snv_precision_th, var_type="snp")
         comp["snv_recall"] = call_metric(hsum, "recall", th=snv_recall_th, var_type="snp")
