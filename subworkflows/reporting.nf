@@ -6,6 +6,7 @@ workflow REPORTING {
     take:
     happy_summaries
     happy_extended
+    snv_af_comparison
     coverage_stats
 
     main:
@@ -30,6 +31,13 @@ workflow REPORTING {
         }
         .map { [[id: "all"], it] }
         .set { ch_coverage_files }
+
+    snv_af_comparison
+        .collectFile(newLine: false, keepHeader: true){ meta, tsv ->
+            ["report_snv_af_comparison.csv", "id,tsv\n${meta.id},${tsv}\n"]
+        }
+        .map { [[id: "all"], it] }
+        .set { ch_snv_af_comparison_files }
     
     Channel.fromPath("${projectDir}/assets/report_template.html").first().set { ch_template }
     Channel.fromPath([
@@ -43,6 +51,7 @@ workflow REPORTING {
     BENCHMARK_REPORT(
         ch_happy_files,
         ch_coverage_files,
+        ch_snv_af_comparison_files,
         ch_template,
         ch_js,
         ch_css

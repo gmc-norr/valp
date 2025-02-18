@@ -46,7 +46,7 @@ workflow VALP {
         }
         .set { ch_comparison_ref }
 
-    // Run the small variant benchmarking. This only includes hap.py at the moment.
+    // Run the small variant benchmarking.
     SMALL_VARIANT_BENCHMARK(
         ch_processed_pairs,
         confRegions,
@@ -73,6 +73,7 @@ workflow VALP {
     REPORTING(
         SMALL_VARIANT_BENCHMARK.out.happy_summary,
         SMALL_VARIANT_BENCHMARK.out.happy_extended,
+        SMALL_VARIANT_BENCHMARK.out.snv_af_comparison,
         COVERAGE.out.coverage_json
     )
 }
