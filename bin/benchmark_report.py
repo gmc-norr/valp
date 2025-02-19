@@ -122,7 +122,6 @@ def coverage_state(
     th: int = 30,
     cov_type: str = "global",
     warn_th: int = 25,
-    warn_fraction: float = 0.25,
 ):
     for comp in coverage_data:
         if comp["id"] != comp_id:
@@ -137,29 +136,26 @@ def coverage_state(
                 if seq["name"] in ("X", "Y", "chrX", "chrY"):
                     continue
                 seq_mean = seq["mean_coverage"]
+                seq_median = seq["median_coverage"]
                 means.append(seq_mean)
                 lengths.append(seq["length"])
 
-                # Only do the coming check if necessary
-                if state == "warn":
-                    continue
+                # If the median of the chromosome is under the warning threshold,
+                # fail the sample.
+                if seq_median < warn_th:
+                    state = "fail"
+                    break
 
-                # Scan the genome and issue a warning if the coverage is under the threshold.
-                window_size = round(seq["length"] * warn_fraction) // seq["bin_size"]
-                i = 0
-                while i < len(seq["coverage"]) - window_size:
-                    window = [x for x in seq["coverage"][i : i + window_size] if x > 0]
-                    window_mean = sum(window) / len(window)
-                    if window_mean < warn_th:
-                        state = "warn"
-                        break
-                    i += 1
+                # If the median is below the upper threshold, issue a warning,
+                # but continue to see if it would fail later on.
+                if seq_median < th:
+                    state = "warn"
 
             assert len(means) == len(lengths)
 
             mean_cov = sum(x * y for x, y in zip(means, lengths)) / sum(lengths)
 
-            if mean_cov < th:
+            if state != "fail" and mean_cov < th:
                 state = "fail"
             return {"mean_coverage": mean_cov, "state": state}
 
@@ -292,7 +288,6 @@ def main(
             th=coverage_th,
             cov_type="global",
             warn_th=coverage_warn_th,
-            warn_fraction=coverage_warn_fraction,
         )
         comp["regional_coverage"] = coverage_state(
             coverage_results, comp["id"], th=coverage_th, cov_type="regional"

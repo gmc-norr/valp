@@ -383,6 +383,7 @@ function chromosomeCoveragePlot(config) {
                 end: acc.cumulativeLength + d.length,
                 length: d.length,
                 meanCoverage: d.mean_coverage,
+                medianCoverage: d.median_coverage,
             }],
             points: [...acc.points, ...(d.coverage.map((c, i) => {
                 return {
@@ -430,7 +431,7 @@ function chromosomeCoveragePlot(config) {
             const xPos = xScale.invert(mouseX);
             const idx = bisector.center(cumulativeData.points, xPos)
             const p = cumulativeData.points[idx];
-            const message = `${data.name}<br>mean cov: ${roundToDecimals(data.meanCoverage, 2)}<br>cov: ${roundToDecimals(p.y, 2).toLocaleString()}`;
+            const message = `${data.name}<br>mean cov: ${roundToDecimals(data.meanCoverage, 2)}<br>median cov: ${data.medianCoverage}<br>cov: ${roundToDecimals(p.y, 2).toLocaleString()}`;
             showTooltip(evt, message);
             updateMouseMarker(p);
         })

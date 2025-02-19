@@ -51,6 +51,7 @@ def global_coverage(
                 "length": length,
                 "name": name,
                 "mean_coverage": d4.mean(name),
+                "median_coverage": d4.median(name),
                 "bin_size": bin_size,
                 "coverage": list(d4.resample(name, bin_size=bin_size)[0]),
             }
@@ -77,6 +78,7 @@ def regional_coverage(
                 "length": length,
                 "name": r[3],
                 "mean_coverage": d4.mean(r[:3]),
+                "median_coverage": d4.median(r[:3]),
                 "bin_size": bin_size,
                 "coverage": list(d4.resample(r[:3], bin_size=bin_size)[0]),
             }
