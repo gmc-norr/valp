@@ -193,6 +193,9 @@
                         <p>Mean squared error: {{ "{0:,.4f}".format(af_comparisons[comp.id].mse) }}</p>
                         <p>Pearson correlation: {{ "{0:,.4f}".format(af_comparisons[comp.id].r) }}</p>
                         <p><i>R</i><sup>2</sup>: {{ "{0:,.4f}".format(af_comparisons[comp.id].r2) }}</p>
+
+                        <div id="af-comparison-plot-{{ comp.id }}">
+                        </div>
                     </div>
                     {% endif %}
                     <div class="my-6">
@@ -257,6 +260,11 @@
         </main>
         <script>
             const coverageData = {{ coverage.values() | list | tojson }};
+            {% if af_comparisons %}
+            const afData = {{ af_comparisons | tojson }};
+            {% else %}
+            const afData = undefined;
+            {% endif %}
             const thresholds = {{ thresholds | tojson }};
         </script>
         {% if js is not none %}

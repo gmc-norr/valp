@@ -46,6 +46,10 @@ def render_template(template, comparisons, coverage, af_comparisons, thresholds,
     )
 
 
+def hexbin_summary(x, y, radius, xlim=(0, 1), ylim=(0, 1)):
+    return []
+
+
 def parse_af_comparison(filename):
     query_af = []
     truth_af = []
@@ -71,17 +75,35 @@ def parse_af_comparison(filename):
     query_af = np.array(query_af)
     truth_af = np.array(truth_af)
 
+    assert len(query_af) == len(truth_af)
+
     ss = np.sum(np.square(query_af - truth_af))
     mse = ss / len(query_af)
     r = np.corrcoef(query_af, truth_af)[0, 1]
     r2 = np.square(r)
 
-    return dict(
+    res = dict(
         mse=mse,
         r=r,
         r2=r2,
     )
 
+    if len(query_af) < 1_000:
+        res["data"] = dict(
+            type="points",
+            af=dict(
+                truth=list(truth_af),
+                query=list(query_af),
+            )
+        )
+    else:
+        res["data"] = dict(
+            type="hexbin",
+            radius=0.05,
+            af=hexbin_summary(truth_af, query_af, 0.05),
+        )
+
+    return res
 
 def call_metric(hsum, metric, th=0.9, var_type="snp"):
     for row in hsum.get("rows", []):
@@ -224,6 +246,7 @@ def main(
     if snv_af_csv is not None:
         for line in read_csv(snv_af_csv):
             snv_af_data[line["id"]] = parse_af_comparison(line["tsv"])
+            snv_af_data[line["id"]]["id"] = line["id"]
 
     happy_results = []
     if happy_csv is not None:

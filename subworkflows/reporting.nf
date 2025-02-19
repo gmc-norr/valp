@@ -44,7 +44,8 @@ workflow REPORTING {
         "${projectDir}/assets/d3.v7.min.js",
         "${projectDir}/assets/d3-interpolate-path.js",
         "${projectDir}/assets/main.js",
-        "${projectDir}/assets/coverage_plots.js"
+        "${projectDir}/assets/coverage_plots.js",
+        "${projectDir}/assets/af_plots.js"
     ]).collect().set { ch_js }
     Channel.fromPath(["${projectDir}/assets/report_style.css"]).collect().set { ch_css }
 
