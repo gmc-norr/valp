@@ -25,12 +25,12 @@ workflow REPORTING {
         .map { [[id: "all"], it] }
         .set { ch_happy_files }
 
-    coverage_stats
+    ch_coverage_files = coverage_stats
         .collectFile(newLine: false, keepHeader: true){ meta, json ->
             ["report_coverage_json_files.csv", "id,sample,genome,json\n${meta.id},${meta.sample},${meta.genome},${json}\n"]
         }
         .map { [[id: "all"], it] }
-        .set { ch_coverage_files }
+        .ifEmpty([[id: "all"], []])
 
     snv_af_comparison
         .collectFile(newLine: false, keepHeader: true){ meta, tsv ->
@@ -48,6 +48,8 @@ workflow REPORTING {
         "${projectDir}/assets/af_plots.js"
     ]).collect().set { ch_js }
     Channel.fromPath(["${projectDir}/assets/report_style.css"]).collect().set { ch_css }
+
+    ch_coverage_files.view({it -> "coverage: $it"})
 
     BENCHMARK_REPORT(
         ch_happy_files,
