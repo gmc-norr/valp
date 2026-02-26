@@ -46,8 +46,6 @@ workflow REPORTING {
     ]).collect()
     ch_css = Channel.fromPath(["${projectDir}/assets/report_style.css"]).collect()
 
-    ch_coverage_files.view({it -> "coverage: $it"})
-
     BENCHMARK_REPORT(
         ch_happy_files,
         ch_coverage_files,
