@@ -8,12 +8,11 @@ workflow PIPELINE_INITIALISATION {
     main:
     validateParameters()
 
-    Channel.fromList(samplesheetToList(input, "assets/schema_input.json"))
-        .set { ch_input }
+    ch_input = Channel.fromList(samplesheetToList(input, "assets/schema_input.json"))
 
     // See if the truth needs to be translated to match the query set.
     def i = 1
-    ch_input
+    ch_comparisons = ch_input
         .tap { ch_original_input }
         .map { x -> x[5] != x[2] }
         .merge(ch_original_input)
@@ -56,7 +55,6 @@ workflow PIPELINE_INITIALISATION {
             d4: [[id: meta.id, sample: meta.queryset_name, genome: meta.query_genome], files[4]]
             coverage_regions: [[id: meta.id, sample: meta.queryset_name, genome: meta.query_genome], files[5]]
         }
-        .set { ch_comparisons }
 
     emit:
     truthset = ch_comparisons.truth

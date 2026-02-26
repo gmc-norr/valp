@@ -13,10 +13,9 @@ workflow VALP {
     coverage_regions // queue channel with bed files for focused coverage analysis (meta, bed)
 
     main:
-    truthset
+    ch_vcf = truthset
         .mix(queryset)
         .transpose()
-        .set { ch_vcf }
 
     // At the moment only performs lift-over, if necessary
     VCF_PREPROCESSING(
@@ -28,7 +27,7 @@ workflow VALP {
     // This will strip all the liftover information from the meta map
     // and add back information on the original genome version for both
     // query and truth sets.
-    VCF_PREPROCESSING.out.vcf
+    ch_processed_pairs = VCF_PREPROCESSING.out.vcf
         .map { meta, vcf -> [[
             id: meta.id,
             genome: meta.liftover ? meta.liftover_to : meta.genome,
@@ -37,14 +36,12 @@ workflow VALP {
             return a.type == 'query' ? -1 : 1
         })
         .map { meta, x -> [meta + [original_query_genome: x[0].original_genome, original_truth_genome: x[1].original_genome, queryset_name: x[0].sample, truthset_name: x[1].sample], x[0].vcf, x[1].vcf] }
-        .set { ch_processed_pairs }
 
-    ch_processed_pairs
+    ch_comparison_ref = ch_processed_pairs
         .multiMap { meta, query, truth ->
             fasta: [meta, params.references[meta.genome].fasta]
             fai: [meta, params.references[meta.genome].fai]
         }
-        .set { ch_comparison_ref }
 
     // Run the small variant benchmarking.
     SMALL_VARIANT_BENCHMARK(
@@ -55,14 +52,13 @@ workflow VALP {
         ch_comparison_ref.fai
     )
 
-    d4
+    ch_coverage = d4
         .filter { meta, d4 -> d4 != [] }
         .join(coverage_regions)
         .multiMap { meta, d4, bed ->
             d4: [meta, d4]
             bed: [meta, bed]
         }
-        .set { ch_coverage }
 
     COVERAGE(
         ch_coverage.d4,

@@ -14,16 +14,14 @@ workflow REPORTING {
     SUMMARY_TO_JSON(happy_summaries)
     EXTENDED_TO_JSON(happy_extended)
 
-    SUMMARY_TO_JSON.out.json
+    ch_all_results = SUMMARY_TO_JSON.out.json
         .join(EXTENDED_TO_JSON.out.json)
-        .set { ch_all_results }
 
-    ch_all_results
+    ch_happy_files = ch_all_results
         .collectFile(newLine: false, keepHeader: true){ meta, summary, extended ->
             ["report_input_files.csv", "id,genome,original_truth_genome,truthset_name,queryset_name,happy_summary,happy_extended\n${meta.id},${meta.genome},${meta.original_truth_genome},${meta.truthset_name},${meta.queryset_name},${summary},${extended}\n"]
         }
         .map { [[id: "all"], it] }
-        .set { ch_happy_files }
 
     ch_coverage_files = coverage_stats
         .collectFile(newLine: false, keepHeader: true){ meta, json ->
@@ -32,24 +30,21 @@ workflow REPORTING {
         .map { [[id: "all"], it] }
         .ifEmpty([[id: "all"], []])
 
-    snv_af_comparison
+    ch_snv_af_comparison_files = snv_af_comparison
         .collectFile(newLine: false, keepHeader: true){ meta, tsv ->
             ["report_snv_af_comparison.csv", "id,tsv\n${meta.id},${tsv}\n"]
         }
         .map { [[id: "all"], it] }
-        .set { ch_snv_af_comparison_files }
     
-    Channel.fromPath("${projectDir}/assets/report_template.html").first().set { ch_template }
-    Channel.fromPath([
+    ch_template = Channel.fromPath("${projectDir}/assets/report_template.html").first()
+    ch_js = Channel.fromPath([
         "${projectDir}/assets/d3.v7.min.js",
         "${projectDir}/assets/d3-interpolate-path.js",
         "${projectDir}/assets/main.js",
         "${projectDir}/assets/coverage_plots.js",
         "${projectDir}/assets/af_plots.js"
-    ]).collect().set { ch_js }
-    Channel.fromPath(["${projectDir}/assets/report_style.css"]).collect().set { ch_css }
-
-    ch_coverage_files.view({it -> "coverage: $it"})
+    ]).collect()
+    ch_css = Channel.fromPath(["${projectDir}/assets/report_style.css"]).collect()
 
     BENCHMARK_REPORT(
         ch_happy_files,

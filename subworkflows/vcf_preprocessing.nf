@@ -8,20 +8,18 @@ workflow VCF_PREPROCESSING {
 
     main:
     // Separate files into those that need liftover and the ones that don't
-    in_vcf
+    ch_vcf = in_vcf
         .branch { meta, vcf -> 
             liftover: meta.liftover
             no_liftover: !meta.liftover
         }
-        .set { ch_vcf }
 
-    ch_vcf.liftover
+    ch_liftover_refs = ch_vcf.liftover
         .multiMap { meta, vcf ->
             source_genome: params.references[meta.genome].fasta
             target_genome: params.references[meta.liftover_to].fasta
             chain_file: params.chainfiles[meta.genome][meta.liftover_to]
         }
-        .set { ch_liftover_refs }
 
     BCFTOOLS_PLUGINLIFTOVER(
         ch_vcf.liftover,
@@ -30,10 +28,9 @@ workflow VCF_PREPROCESSING {
         ch_liftover_refs.chain_file
     )
 
-    BCFTOOLS_PLUGINLIFTOVER.out.vcf
+    ch_liftover_vcf = BCFTOOLS_PLUGINLIFTOVER.out.vcf
         // Collect all VCFs in a single channel
         .mix(ch_vcf.no_liftover)
-        .set { ch_liftover_vcf }
 
     BCFTOOLS_SORT(ch_liftover_vcf)
 
