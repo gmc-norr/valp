@@ -18,13 +18,14 @@ process BENCHMARK_REPORT {
     def template_arg = "--template ${report_template}"
     def css_arg = css.collect { "--css ${it}" }.join(" ")
     def js_arg = js.collect { "--js ${it}" }.join(" ")
+    def cov_arg = coverage_csv ? "--coverage-csv ${coverage_csv}" : ""
     """
     benchmark_report.py \\
         ${css_arg} \\
         ${js_arg} \\
         ${template_arg} \\
         --happy-csv ${happy_output} \\
-        --coverage-csv ${coverage_csv} \\
+        ${cov_arg} \\
         --snv-af-csv ${snv_af_csv} \\
         --output ${prefix}.benchmark_report.html
     """
