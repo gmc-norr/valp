@@ -56,11 +56,16 @@ def parse_af_comparison(filename):
     # ss = 0
     with open(filename) as f:
         reader = csv.DictReader(f, delimiter="\t")
-        for line in reader:
-            assert line["query_chrom"] == line["truth_chrom"]
-            assert line["query_pos"] == line["truth_pos"]
-            assert line["query_ref"] == line["truth_ref"]
-            assert line["query_alt"] == line["truth_alt"]
+        for i, line in enumerate(reader):
+            if line["query_chrom"] != line["truth_chrom"]:
+                raise ValueError(f"mismatching chromosomes for comparison on line {i+1} in {filename}: {line}")
+            if line["query_pos"] != line["truth_pos"]:
+                raise ValueError(f"mismatching position for comparison on line {i+1} in {filename}: {line}")
+            if line["query_ref"] != line["truth_ref"]:
+                raise ValueError(f"mismatching reference allele for comparison on line {i+1} in {filename}: {line}")
+            if line["query_alt"] != line["truth_alt"]:
+                raise ValueError(f"mismatching alternative allele for comparison on line {i+1} in {filename}: {line}")
+
             if line["query_af"] == "NA" or line["truth_af"] == "NA":
                 continue
             for raw_query_af, raw_truth_af in zip(
