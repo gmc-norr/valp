@@ -20,7 +20,7 @@ workflow VALP {
     // At the moment only performs lift-over, if necessary
     VCF_PREPROCESSING(
         ch_vcf,
-        params.include_chr
+        params.include_chr,
     )
 
     // Create a new channel [meta, query_vcf, truth_vcf]
@@ -32,13 +32,13 @@ workflow VALP {
             id: meta.id,
             genome: meta.liftover ? meta.liftover_to : meta.genome,
         ], [type: meta.type, sample: meta.sample, original_genome: meta.genome, vcf: vcf]] }
-        .groupTuple(size: 2, sort: { a, b ->
+        .groupTuple(size: 2, sort: { a, _b ->
             return a.type == 'query' ? -1 : 1
         })
         .map { meta, x -> [meta + [original_query_genome: x[0].original_genome, original_truth_genome: x[1].original_genome, queryset_name: x[0].sample, truthset_name: x[1].sample], x[0].vcf, x[1].vcf] }
 
     ch_comparison_ref = ch_processed_pairs
-        .multiMap { meta, query, truth ->
+        .multiMap { meta, _query, _truth ->
             fasta: [meta, params.references[meta.genome].fasta]
             fai: [meta, params.references[meta.genome].fai]
         }
@@ -49,14 +49,14 @@ workflow VALP {
         confRegions,
         limitRegions,
         ch_comparison_ref.fasta,
-        ch_comparison_ref.fai
+        ch_comparison_ref.fai,
     )
 
     ch_coverage = d4
-        .filter { meta, d4 -> d4 != [] }
+        .filter { _meta, cov -> cov != [] }
         .join(coverage_regions)
-        .multiMap { meta, d4, bed ->
-            d4: [meta, d4]
+        .multiMap { meta, cov, bed ->
+            d4: [meta, cov]
             bed: [meta, bed]
         }
 
