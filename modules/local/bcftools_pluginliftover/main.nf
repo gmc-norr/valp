@@ -21,17 +21,17 @@ process BCFTOOLS_PLUGINLIFTOVER {
     def extra = task.ext.extra ?: ""
     
     """
-    bcftools +${plugin_path} \
-        -Oz \
-        -o ${prefix}.liftover.vcf.gz \
-        ${vcf} \
-        -- \
-        -s ${source_ref} \
-        -f ${target_ref} \
-        -c ${chain_file} \
-        -Oz \
-        --write-reject \
-        --reject ${prefix}.rejected.vcf.gz \
+    bcftools +${plugin_path} \\
+        -Oz \\
+        -o ${prefix}.liftover.vcf.gz \\
+        ${vcf} \\
+        -- \\
+        -s ${source_ref} \\
+        -f ${target_ref} \\
+        -c ${chain_file} \\
+        -Oz \\
+        --write-reject \\
+        --reject ${prefix}.rejected.vcf.gz \\
         ${extra}
     """
 }
