@@ -39,8 +39,8 @@ workflow VALP {
 
     ch_comparison_ref = ch_processed_pairs
         .multiMap { meta, _query, _truth ->
-            fasta: [meta, params.references[meta.genome].fasta]
-            fai: [meta, params.references[meta.genome].fai]
+            fasta: [meta, file(params.references[meta.genome].fasta)]
+            fai: [meta, file(params.references[meta.genome].fai)]
         }
 
     // Run the small variant benchmarking.

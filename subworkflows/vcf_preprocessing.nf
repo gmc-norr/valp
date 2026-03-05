@@ -18,9 +18,9 @@ workflow VCF_PREPROCESSING {
 
     ch_liftover_refs = ch_vcf.liftover
         .multiMap { meta, _vcf ->
-            source_genome: params.references[meta.genome].fasta
-            target_genome: params.references[meta.liftover_to].fasta
-            chain_file: params.chainfiles[meta.genome][meta.liftover_to]
+            source_genome: file(params.references[meta.genome].fasta)
+            target_genome: file(params.references[meta.liftover_to].fasta)
+            chain_file: file(params.chainfiles[meta.genome][meta.liftover_to])
         }
 
     BCFTOOLS_PLUGINLIFTOVER(
@@ -41,7 +41,7 @@ workflow VCF_PREPROCESSING {
 
     // Create region definitions from the include config param together with the fasta index for the sample in question
     ch_fai = ch_indexed_vcf
-        .map { meta, _vcf, _tbi -> [meta, params.references[meta.liftover_to ? meta.liftover_to : meta.genome].fai] }
+        .map { meta, _vcf, _tbi -> [meta, file(params.references[meta.liftover_to ? meta.liftover_to : meta.genome].fai)] }
     ch_view_input = FAI_TO_REGIONS(ch_fai, include_chr)
         .join(ch_indexed_vcf)
         .multiMap { meta, regions, vcf, tbi ->
