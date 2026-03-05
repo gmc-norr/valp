@@ -16,18 +16,19 @@ workflow VCF_PREPROCESSING {
             no_liftover: !meta.liftover
         }
 
-    ch_liftover_refs = ch_vcf.liftover
-        .multiMap { meta, _vcf ->
+    ch_liftover_input = ch_vcf.liftover
+        .multiMap { meta, vcf ->
+            vcf: [meta, vcf]
             source_genome: file(params.references[meta.genome].fasta)
             target_genome: file(params.references[meta.liftover_to].fasta)
             chain_file: file(params.chainfiles[meta.genome][meta.liftover_to])
         }
 
     BCFTOOLS_PLUGINLIFTOVER(
-        ch_vcf.liftover,
-        ch_liftover_refs.source_genome,
-        ch_liftover_refs.target_genome,
-        ch_liftover_refs.chain_file
+        ch_liftover_input.vcf,
+        ch_liftover_input.source_genome,
+        ch_liftover_input.target_genome,
+        ch_liftover_input.chain_file
     )
 
     ch_liftover_vcf = BCFTOOLS_PLUGINLIFTOVER.out.vcf
